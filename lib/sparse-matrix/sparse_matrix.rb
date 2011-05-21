@@ -1,0 +1,3 @@
+class SparseMatrix < Matrix
+  
+end
