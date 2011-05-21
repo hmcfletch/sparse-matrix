@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Les Fletcher"]
   s.email       = ["les.fletcher@gmail.com"]
   s.homepage    = ""
-  s.summary     = %q{Sparse matrix classes and vector classes}
-  s.description = %q{Sparse matrix classes and vector classes that can be dropped in place for the built in Matrix and Vector classes}
+  s.summary     = %q{Sparse matrix and vector classes for Ruby}
+  s.description = %q{Sparse matrix and vector classes for Ruby that can be dropped in place for the built in Matrix and Vector classes}
 
   s.rubyforge_project = "sparse-matrix"
 
