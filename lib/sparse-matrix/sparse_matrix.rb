@@ -160,11 +160,10 @@ class SparseMatrix < Matrix
   #        6
   #
   def SparseMatrix.column_vector(column)
-    # raise "NOT IMPLEMENTED"
     if column.is_a?(Hash)
-      new SparseMatrix.transpose_hash({ 0 => convert_to_hash(column) })
+      new ({ 0 => convert_to_hash(column) }).transpose
     else
-      new SparseMatrix.transpose_hash({ 0 => convert_to_hash(column) }), column.size, 1
+      new ({ 0 => convert_to_hash(column) }).transpose, column.size, 1
     end
   end
 
