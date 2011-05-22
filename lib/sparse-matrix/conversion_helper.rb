@@ -13,7 +13,7 @@ module SM
         obj.each_with_index { |j,i| h[i] = j unless j == 0 }
         h
       when Vector
-        hash = Hash.new(0)
+        h = Hash.new(0)
         obj.to_a.each_with_index { |j,i| h[i] = j unless j == 0 }
         h
       else
@@ -32,9 +32,23 @@ module SM
     # Converts an array into a hash dropping all of the 0 elements
     #
     def convert_array_to_sparse_hash
-      hash = Hash.new(0)
-      obj.to_a.each_with_index { |j,i| hash[i] = j unless j == 0 }
-      hash
+      h = Hash.new(0)
+      obj.to_a.each_with_index { |j,i| h[i] = j unless j == 0 }
+      h
+    end
+
+    #
+    # Transposes a hash as if it were a two dimensional array
+    #
+    def transpose_hash(h_orig)
+      h = {}
+      h_orig.each_pair do |k1,v1|
+        v1.each_pair do |k2,v2|
+          h[k2] ||= {}
+          h[k2][k1] = v2
+        end
+      end
+      h
     end
 
     private :convert_to_hash, :convert_array_to_sparse_hash

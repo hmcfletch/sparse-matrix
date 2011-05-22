@@ -38,8 +38,11 @@ class SparseMatrix < Matrix
       num_elems = v.length
       rows[k] = convert_to_hash(v, copy)
       num_rows = k + 1 if k + 1 > num_rows
-      tmp_num_col = [num_elems, rows[k].keys.max + 1].max
+
+      tmp_num_col = [num_elems, rows[k].empty? ? 0 : rows[k].keys.max + 1].max
       num_columns = tmp_num_col if tmp_num_col > num_columns
+      # remove the row if it is empty
+      rows.delete(k) if rows[k].empty?
     end
 
     new rows, num_rows, num_columns
@@ -68,17 +71,19 @@ class SparseMatrix < Matrix
   #     => a 3x3 sparse matrix with random elements
   #
   def SparseMatrix.build(row_size, column_size = row_size)
-    raise "NOT IMPLEMENTED"
     row_size = CoercionHelper.coerce_to_int(row_size)
     column_size = CoercionHelper.coerce_to_int(column_size)
     raise ArgumentError if row_size < 0 || column_size < 0
     return to_enum :build, row_size, column_size unless block_given?
-    rows = Array.new(row_size) do |i|
-      Array.new(column_size) do |j|
-        yield i, j
+    rows = {}
+    row_size.times do |i|
+      column_size.times do |j|
+        rows[i] ||= {}
+        val = yield i, j
+        rows[i][j] = val unless val == 0
       end
     end
-    new rows, column_size
+    new rows, row_size, column_size
   end
 
   #
@@ -89,14 +94,12 @@ class SparseMatrix < Matrix
   #         0  0 -3
   #
   def SparseMatrix.diagonal(*values)
-    raise "NOT IMPLEMENTED"
     size = values.size
-    rows = Array.new(size) {|j|
-      row = Array.new(size, 0)
-      row[j] = values[j]
-      row
-    }
-    new rows
+    rows = {}
+    size.times do |i|
+      rows[i] = { i => values[i] } unless values[i] == 0
+    end
+    new rows, size, size
   end
 
   #
@@ -107,8 +110,7 @@ class SparseMatrix < Matrix
   #        0 5
   #
   def SparseMatrix.scalar(n, value)
-    raise "NOT IMPLEMENTED"
-    Matrix.diagonal(*Array.new(n, value))
+    SparseMatrix.diagonal(*Array.new(n, value))
   end
 
   #
@@ -118,7 +120,6 @@ class SparseMatrix < Matrix
   #        0 1
   #
   def SparseMatrix.identity(n)
-    raise "NOT IMPLEMENTED"
     SparseMatrix.scalar(n, 1)
   end
   class << SparseMatrix
@@ -133,34 +134,37 @@ class SparseMatrix < Matrix
   #        0 0
   #
   def SparseMatrix.zero(n)
-    raise "NOT IMPLEMENTED"
     SparseMatrix.scalar(n, 0)
   end
 
   #
-  # Creates a single-row SPARSE matrix where the values of that row are as given in
+  # Creates a single-row sparse matrix where the values of that row are as given in
   # +row+.
-  #   SPARSEMatrix.row_vector([4,5,6])
+  #   SparseMatrix.row_vector([4,5,6])
   #     => 4 5 6
   #
-  def Matrix.row_vector(row)
-    raise "NOT IMPLEMENTED"
-    row = convert_to_array(row)
-    new [row]
+  def SparseMatrix.row_vector(row)
+    if row.is_a?(Hash)
+      new convert_to_hash(row)
+    else
+      new convert_to_hash(row), 1, row.size
+    end
   end
 
   #
-  # Creates a single-column matrix where the values of that column are as given
+  # Creates a single-column sparse matrix where the values of that column are as given
   # in +column+.
-  #   Matrix.column_vector([4,5,6])
+  #   SparseMatrix.column_vector([4,5,6])
   #     => 4
   #        5
   #        6
   #
-  def Matrix.column_vector(column)
-    raise "NOT IMPLEMENTED"
-    column = convert_to_array(column)
-    new [column].transpose, 1
+  def SparseMatrix.column_vector(column)
+    if column.is_a?(Hash)
+      new [ convert_to_hash(column) ].transpose
+    else
+      new [ convert_to_hash(column) ].transpose, column.size, 1
+    end
   end
 
   #
@@ -177,28 +181,37 @@ class SparseMatrix < Matrix
   #     => Matrix[[0, 0, 0], [0, 0, 0]]
   #
   def Matrix.empty(row_size = 0, column_size = 0)
-    raise "NOT IMPLEMENTED"
-    Matrix.Raise ArgumentError, "One size must be 0" if column_size != 0 && row_size != 0
-    Matrix.Raise ArgumentError, "Negative size" if column_size < 0 || row_size < 0
+    SparseMatrix.Raise ArgumentError, "One size must be 0" if column_size != 0 && row_size != 0
+    SparseMatrix.Raise ArgumentError, "Negative size" if column_size < 0 || row_size < 0
 
-    new([[]]*row_size, column_size)
+    new({}, row_size, column_size)
   end
 
   #
   # SparseMatrix.new is private; use SparseMatrix.rows, columns, [], etc... to create.
   #
-  def initialize(rows, num_rows, num_columns)
+  def initialize(rows, num_rows=nil, num_columns=nil)
     # No checking is done at this point. rows must be a Hash of Hashes.
     # column_size must be the maximum value of the key set, if there are any,
     # otherwise it *must* be specified and can be any integer >= 0
     @rows = rows
+
+    # determine size if not given
+    if num_rows.nil? || num_columns.nil?
+      if rows.is_a?(Hash)
+        num_rows = rows.keys.max
+        num_columns = rows.values.collect { |c| c.keys.max }.max
+      elsif rows.is_a?(Array)
+        num_rows = rows.size
+        num_columns = rows[0].size
+      end
+    end
     @row_size = num_rows
     @column_size = num_columns
   end
 
-  def new_matrix(rows, column_size = rows[0].size) # :nodoc:
-    raise "NOT IMPLEMENTED"
-    Matrix.send(:new, rows, column_size) # bypass privacy of Matrix.new
+  def new_matrix(rows, column_size = nil) # :nodoc:
+    SparseMatrix.send(:new, rows, nil, column_size) # bypass privacy of Matrix.new
   end
   private :new_matrix
 
@@ -206,7 +219,7 @@ class SparseMatrix < Matrix
   # Returns element (+i+,+j+) of the matrix.  That is: row +i+, column +j+.
   #
   def [](i, j)
-    @rows.fetch(i){return nil}[j]
+    @rows.fetch(i){ return nil }[j]
   end
   alias element []
   alias component []
@@ -230,13 +243,8 @@ class SparseMatrix < Matrix
   end
 
   #
-  # Returns the number of columns.
-  #
-  attr_reader :column_size
-
-  #
-  # Returns row vector number +i+ of the matrix as a Vector (starting at 0 like
-  # an array).  When a block is given, the elements of that vector are iterated.
+  # Returns sparse row vector number +i+ of the matrix as a Vector (starting at 0 like
+  # an array).  When a block is given, the non zero elements of that vector are iterated.
   #
   def row(i, &block) # :yield: e
     raise "NOT IMPLEMENTED"
@@ -249,8 +257,8 @@ class SparseMatrix < Matrix
   end
 
   #
-  # Returns column vector number +j+ of the matrix as a Vector (starting at 0
-  # like an array).  When a block is given, the elements of that vector are
+  # Returns sparse column vector number +j+ of the matrix as a Vector (starting at 0
+  # like an array).  When a block is given, the non zero elements of that vector are
   # iterated.
   #
   def column(j) # :yield: e
@@ -267,6 +275,146 @@ class SparseMatrix < Matrix
         @rows[i][j]
       }
       Vector.elements(col, false)
+    end
+  end
+
+  #--
+  # TESTING -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  #++
+
+  #
+  # Returns +true+ if this is an empty matrix, i.e. if the number of rows
+  # or the number of columns is 0.
+  #
+  def empty?
+    column_size == 0 || row_size == 0
+  end
+
+  #
+  # Returns +true+ if all entries of the matrix are real.
+  #
+  def real?
+    all?(&:real?)
+  end
+
+  #
+  # Returns +true+ if this is a regular (i.e. non-singular) matrix.
+  #
+  def regular?
+    not singular?
+  end
+
+  #
+  # Returns +true+ is this is a singular matrix.
+  #
+  def singular?
+    raise "NOT IMPLEMENTED"
+    determinant == 0
+  end
+
+  #
+  # Returns +true+ is this is a square matrix.
+  #
+  def square?
+    column_size == row_size
+  end
+
+  #--
+  # OBJECT METHODS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  #++
+
+  #
+  # Returns +true+ if and only if the two matrices contain equal elements.
+  #
+  def ==(other)
+    return false unless SparseMatrix === other &&
+                        column_size == other.column_size &&
+                        row_size == other.row_size # necessary for empty matrices
+    rows == other.rows
+  end
+
+  def eql?(other)
+    return false unless Matrix === other &&
+                        column_size == other.column_size &&
+                        row_size == other.row_size # necessary for empty matrices
+    rows.eql? other.rows
+  end
+
+  #
+  # Returns a clone of the matrix, so that the contents of each do not reference
+  # identical objects.
+  # There should be no good reason to do this since Matrices are immutable.
+  #
+  def clone
+    raise "NOT IMPLEMENTED"
+    new_matrix @rows.map(&:dup), column_size
+  end
+
+  #
+  # Returns a hash-code for the matrix.
+  #
+  def hash
+    @rows.hash
+  end
+
+  #--
+  # ARITHMETIC -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  #++
+
+  #--
+  # MATRIX FUNCTIONS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  #++
+
+  #
+  # Returns the transpose of the matrix.
+  #   Matrix[[1,2], [3,4], [5,6]]
+  #     => 1 2
+  #        3 4
+  #        5 6
+  #   Matrix[[1,2], [3,4], [5,6]].transpose
+  #     => 1 3 5
+  #        2 4 6
+  #
+  def transpose
+    return SparseMatrix.empty(column_size, 0) if row_size.zero?
+    # new_matrix @rows.transpose_hash, row_size
+    new SparseMatrix.transpose_hash(@rows), column_size, row_size
+  end
+  alias t transpose
+
+  #--
+  # COMPLEX ARITHMETIC -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  #++
+
+  #--
+  # CONVERTING -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  #++
+
+  #--
+  # PRINTING -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  #++
+
+  #
+  # Overrides Object#to_s
+  #
+  def to_s
+    if empty?
+      "SparseMatrix.empty(#{row_size}, #{column_size})"
+    else
+      "SparseMatrix[" + @rows.collect{|row|
+        "[" + row.collect{|e| e.to_s}.join(", ") + "]"
+      }.join(", ")+"]"
+    end
+  end
+
+  #
+  # Overrides Object#inspect
+  #
+  def inspect
+    if empty?
+      "SparseMatrix.empty(#{row_size}, #{column_size})"
+    else
+      "SparseMatrix#{@rows.inspect}"
     end
   end
 
