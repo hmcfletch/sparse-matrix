@@ -9,11 +9,11 @@ module SM
       when Hash
         copy ? obj.dup : obj
       when Array
-        h = Hash.new(0)
+        h = {}
         obj.each_with_index { |j,i| h[i] = j unless j == 0 }
         h
       when Vector
-        h = Hash.new(0)
+        h = {}
         obj.to_a.each_with_index { |j,i| h[i] = j unless j == 0 }
         h
       else
@@ -34,20 +34,6 @@ module SM
     def convert_array_to_sparse_hash
       h = Hash.new(0)
       obj.to_a.each_with_index { |j,i| h[i] = j unless j == 0 }
-      h
-    end
-
-    #
-    # Transposes a hash as if it were a two dimensional array
-    #
-    def transpose_hash(h_orig)
-      h = {}
-      h_orig.each_pair do |k1,v1|
-        v1.each_pair do |k2,v2|
-          h[k2] ||= {}
-          h[k2][k1] = v2
-        end
-      end
       h
     end
 

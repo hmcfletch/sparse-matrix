@@ -1,5 +1,6 @@
 require 'matrix'
-require 'sparse-matrix/vector'
-require 'sparse-matrix/matrix'
+require 'sparse-matrix/core_ext/hash'
+require 'sparse-matrix/core_ext/vector'
+require 'sparse-matrix/core_ext/matrix'
 require 'sparse-matrix/sparse_vector'
 require 'sparse-matrix/sparse_matrix'

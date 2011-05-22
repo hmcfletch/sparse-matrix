@@ -160,15 +160,16 @@ class SparseMatrix < Matrix
   #        6
   #
   def SparseMatrix.column_vector(column)
+    # raise "NOT IMPLEMENTED"
     if column.is_a?(Hash)
-      new [ convert_to_hash(column) ].transpose
+      new SparseMatrix.transpose_hash({ 0 => convert_to_hash(column) })
     else
-      new [ convert_to_hash(column) ].transpose, column.size, 1
+      new SparseMatrix.transpose_hash({ 0 => convert_to_hash(column) }), column.size, 1
     end
   end
 
   #
-  # Creates a empty matrix of +row_size+ x +column_size+.
+  # Creates a empty sparse matrix of +row_size+ x +column_size+.
   # At least one of +row_size+ or +column_size+ must be 0.
   #
   #   m = Matrix.empty(2, 0)
@@ -180,7 +181,7 @@ class SparseMatrix < Matrix
   #   m * n
   #     => Matrix[[0, 0, 0], [0, 0, 0]]
   #
-  def Matrix.empty(row_size = 0, column_size = 0)
+  def SparseMatrix.empty(row_size = 0, column_size = 0)
     SparseMatrix.Raise ArgumentError, "One size must be 0" if column_size != 0 && row_size != 0
     SparseMatrix.Raise ArgumentError, "Negative size" if column_size < 0 || row_size < 0
 
@@ -199,19 +200,25 @@ class SparseMatrix < Matrix
     # determine size if not given
     if num_rows.nil? || num_columns.nil?
       if rows.is_a?(Hash)
-        num_rows = rows.keys.max
-        num_columns = rows.values.collect { |c| c.keys.max }.max
+        num_rows = rows.keys.max + 1 if num_rows.nil?
+        num_columns = rows.values.collect { |c| c.keys.max }.max + 1 if num_columns.nil?
       elsif rows.is_a?(Array)
-        num_rows = rows.size
-        num_columns = rows[0].size
+        num_rows = rows.size if num_rows.nil?
+        num_columns = rows[0].size if num_columns.nil?
       end
     end
     @row_size = num_rows
     @column_size = num_columns
+
+    # set defaults for the hashes
+    @rows.default = Hash.new(0)
+    @rows.keys.each do |k|
+      @rows[k].default = 0
+    end
   end
 
-  def new_matrix(rows, column_size = nil) # :nodoc:
-    SparseMatrix.send(:new, rows, nil, column_size) # bypass privacy of Matrix.new
+  def new_matrix(rows, row_size = nil, column_size = nil) # :nodoc:
+    SparseMatrix.send(:new, rows, row_size, column_size) # bypass privacy of Matrix.new
   end
   private :new_matrix
 
@@ -377,8 +384,7 @@ class SparseMatrix < Matrix
   #
   def transpose
     return SparseMatrix.empty(column_size, 0) if row_size.zero?
-    # new_matrix @rows.transpose_hash, row_size
-    new SparseMatrix.transpose_hash(@rows), column_size, row_size
+    new @rows.transpose, column_size, row_size
   end
   alias t transpose
 

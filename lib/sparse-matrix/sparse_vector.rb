@@ -48,7 +48,7 @@ class SparseVector < Vector
   # Returns element number +i+ (starting at zero) of the vector.
   #
   def [](i)
-    @elements[i]
+    i >= size ? nil : @elements[i]
   end
   alias element []
   alias component []
@@ -70,15 +70,31 @@ class SparseVector < Vector
   private :[]=, :set_element, :set_component
 
   #
-  # Returns the number of elements in the vector.
+  # Returns the number of elements (zeros and non-zeros) in the sparse vector.
   #
   def size; @size end
 
+  #
+  # Resize the sparse vector, possibly removing elements if val is less than
+  # the current size.
+  #
+  def size=(val)
+    if @size > val
+      @elements.keys.each do |k|
+        @elements.delete(k) if k >= val
+      end
+    end
+    @size = val
+  end
+
+  #
+  # Return the number of non-zero elements in the sparse vector
+  #
   def nnz; @elements.size end
 
-  def self.sparse?; true end
-
+  # FIXME: make protected?
   def sorted_keys; @elements.keys.sort end
+
   #--
   # ENUMERATIONS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   #++
@@ -95,11 +111,24 @@ class SparseVector < Vector
   end
 
   #
+  # Iterate over the elements (zero and non-zero) of this sparse vector and +v+ in conjunction.
+  #
+  # FIXME: figure out what to do with no block
+  def each2(v) # :yield: e1, e2
+    SparseVector.Raise ErrDimensionMismatch if size != v.size
+    raise "NOT IMPLEMENTED" unless block_given?
+    size.times do |i|
+      yield @elements[i], v[i]
+    end
+  end
+
+  #
   # Iterate over the non-zero elements of this vector and +v+ in conjunction.
   #
   # FIXME: figure out what to do with no block
   # FIXME: only works with another SparseVector
-  def each2(v) # :yield: e1, e2
+  def each2_nz(v) # :yield: e1, e2
+    raise TypeError, "Integer is not like SparseVector" if v.kind_of?(Integer)
     SparseVector.Raise ErrDimensionMismatch if size != v.size
     # return to_enum(:each2, v) unless block_given?
     raise "NOT IMPLEMENTED" unless block_given?
@@ -134,8 +163,23 @@ class SparseVector < Vector
   # in conjunction.
   #
   # FIXME: figure out what to do with no block
-  # FIXME: only works with another SparseVector
   def collect2(v) # :yield: e1, e2
+    raise "NOT IMPLEMENTED" unless block_given?
+    raise TypeError, "Integer is not like SparseVector" if v.kind_of?(Integer)
+    SparseVector.Raise ErrDimensionMismatch if size != v.size
+    # return to_enum(:collect2, v) unless block_given?
+    Array.new(size) do |i|
+      yield @elements[i], v[i]
+    end
+  end
+
+  #
+  # Collects (as in Enumerable#collect) over the elements of this vector and +v+
+  # in conjunction.
+  #
+  # FIXME: figure out what to do with no block
+  # FIXME: only works with another SparseVector
+  def collect2_nz(v) # :yield: e1, e2
     SparseVector.Raise ErrDimensionMismatch if size != v.size
     # return to_enum(:collect2, v) unless block_given?
     raise "NOT IMPLEMENTED" unless block_given?
@@ -283,7 +327,7 @@ class SparseVector < Vector
     case v
     when SparseVector
       SparseVector.Raise ErrDimensionMismatch if size != v.size
-      els = collect2(v) {|v1, v2|
+      els = collect2_nz(v) {|v1, v2|
         v1 - v2
       }
       SparseVector.elements(els, false)
@@ -294,7 +338,7 @@ class SparseVector < Vector
       }
       SparseVector.elements(els, false)
     when Matrix
-      Matrix.column_vector(self) - v
+      SparseMatrix.column_vector(self) - v
     else
       raise "NOT IMPLEMENTED"
       apply_through_coercion(v, __method__)
@@ -310,7 +354,7 @@ class SparseVector < Vector
       h = Hash.new(0)
       @elements.each_pair { |k,v| h[k] = v / x }
       SparseVector.elements(h, false)
-    when Matrix, Vector
+    when Matrix, Vector # covers SparseMatrix and SparseVector
       SparseVector.Raise ErrOperationNotDefined, "/", self.class, x.class
     else
       raise "NOT IMPLEMENTED"
@@ -330,14 +374,11 @@ class SparseVector < Vector
     SparseVector.Raise ErrDimensionMismatch if size != v.size
 
     p = 0
-    each2(v) do |v1,v2|
+    each2_nz(v) do |v1,v2|
       p += v1*v2
     end
     p
   end
-
-  # =======================================================================
-  # Private helper modules
 
   #
   # Returns the modulus (Pythagorean distance) of the vector.
@@ -355,8 +396,8 @@ class SparseVector < Vector
   # Creates a single-row sparse matrix from this sparse vector.
   #
   def covector
-    raise "NOT IMPLEMENTED"
-    Matrix.row_vector(self)
+    # raise "NOT IMPLEMENTED"
+    SparseMatrix.row_vector(self)
   end
 
   #
