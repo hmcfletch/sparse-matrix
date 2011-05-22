@@ -247,6 +247,10 @@ class SparseMatrix < Matrix
     @column_size
   end
 
+  def nnz
+    @rows.values.inject(0) { |m,v| m + v.size }
+  end
+
   #
   # Returns sparse row vector number +i+ of the matrix as a Vector (starting at 0 like
   # an array).  When a block is given, the non zero elements of that vector are iterated.
