@@ -1,10 +1,13 @@
+require 'sparse-matrix/conversion_helper'
+require 'sparse-matrix/coercion_helper'
+
 class SparseVector < Vector
   include ExceptionForMatrix
   include Enumerable
-  # include Matrix::CoercionHelper
-  extend Matrix::ConversionHelper
-  #INSTANCE CREATION
+  include SM::CoercionHelper
+  extend SM::ConversionHelper
 
+  # instance creations
   private_class_method :new
   attr_reader :elements
   protected :elements
@@ -335,8 +338,6 @@ class SparseVector < Vector
 
   # =======================================================================
   # Private helper modules
-
-  extend ConversionHelper
 
   #
   # Returns the modulus (Pythagorean distance) of the vector.
