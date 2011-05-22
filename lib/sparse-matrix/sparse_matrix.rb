@@ -55,7 +55,6 @@ class SparseMatrix < Matrix
   #          93 66
   #
   def SparseMatrix.columns(columns)
-    raise "NOT IMPLEMENTED"
     SparseMatrix.rows(columns, false).transpose
   end
 
@@ -383,7 +382,7 @@ class SparseMatrix < Matrix
   #
   def transpose
     return SparseMatrix.empty(column_size, 0) if row_size.zero?
-    new @rows.transpose, column_size, row_size
+    new_matrix @rows.transpose, column_size, row_size
   end
   alias t transpose
 
