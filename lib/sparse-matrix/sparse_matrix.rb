@@ -256,7 +256,7 @@ class SparseMatrix < Matrix
   # an array).  When a block is given, the elements of that vector are iterated.
   #
   def row(i, &block) # :yield: e
-    raise "NOT IMPLEMENTED"
+    i = i < 0 ? row_size - i : i
     if block_given?
       @rows.fetch(i){return self}
       column_size.times do |j|
@@ -273,7 +273,7 @@ class SparseMatrix < Matrix
   # an array).  When a block is given, the non-zero elements of that vector are iterated.
   #
   def row_nz(i, &block) # :yield: e
-    raise "NOT IMPLEMENTED"
+    i = i < 0 ? row_size + i : i
     if block_given?
       @rows.fetch(i){return self}
       @rows[i].keys.sort do |j|
@@ -286,24 +286,44 @@ class SparseMatrix < Matrix
   end
 
   #
-  # Returns sparse column vector number +j+ of the matrix as a Vector (starting at 0
-  # like an array).  When a block is given, the non zero elements of that vector are
-  # iterated.
+  # Returns sparse column vector number +j+ of the matrix as a SparseVector (starting at 0
+  # like an array).  When a block is given, the elements of that vector are iterated.
   #
   def column(j) # :yield: e
-    raise "NOT IMPLEMENTED"
+    j = j < 0 ? column_size + j : j
     if block_given?
-      return self if j >= column_size || j < -column_size
+      return self if j >= column_size
       row_size.times do |i|
         yield @rows[i][j]
       end
       self
     else
-      return nil if j >= column_size || j < -column_size
-      col = Array.new(row_size) {|i|
+      return nil if j >= column_size
+      col = Array.new(row_size) { |i|
         @rows[i][j]
       }
-      Vector.elements(col, false)
+      SparseVector.elements(col, false)
+    end
+  end
+
+  #
+  # Returns sparse column vector number +j+ of the matrix as a SparseVector (starting at 0
+  # like an array).  When a block is given, the non-zero elements of that vector are iterated.
+  #
+  def column_nz(j) # :yield: e
+    j = j < 0 ? column_size + j : j
+    if block_given?
+      return self if j >= column_size
+      row_size.times do |i|
+        yield @rows[i][j]
+      end
+      self
+    else
+      return nil if j >= column_size
+      col = Array.new(row_size) { |i|
+        @rows[i][j]
+      }
+      SparseVector.elements(col, false)
     end
   end
 
