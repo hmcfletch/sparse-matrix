@@ -100,14 +100,26 @@ class SparseVector < Vector
   #++
 
   #
+  # Iterate over the elements of this vector
+  #
+  # FIXME: figure out what to do with no block
+  def each(&block)
+    raise "NOT IMPLEMENTED" unless block_given?
+    # return to_enum(:each) unless block_given?
+    size.times.each { |i| yield @elements[i] }
+    end
+    self
+  end
+
+  #
   # Iterate over the non-zero elements of this vector
   #
-  # FIXME: figure out what to do with this
-  def each(&block)
-    raise "NOT IMPLEMENTED"
+  # FIXME: figure out what to do with no block
+  def each_nz(&block)
+    raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:each) unless block_given?
-    # @elements.each(&block)
-    # self
+    sorted_keys.each { |k| yield @elements[k] }
+    self
   end
 
   #

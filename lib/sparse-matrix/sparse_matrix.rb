@@ -253,15 +253,35 @@ class SparseMatrix < Matrix
 
   #
   # Returns sparse row vector number +i+ of the matrix as a Vector (starting at 0 like
-  # an array).  When a block is given, the non zero elements of that vector are iterated.
+  # an array).  When a block is given, the elements of that vector are iterated.
   #
   def row(i, &block) # :yield: e
     raise "NOT IMPLEMENTED"
     if block_given?
-      @rows.fetch(i){return self}.each(&block)
+      @rows.fetch(i){return self}
+      column_size.times do |j|
+        yield @rows[i][j]
+      end
       self
     else
-      Vector.elements(@rows.fetch(i){return nil})
+      SparseVector.elements(@rows.fetch(i){return nil})
+    end
+  end
+
+  #
+  # Returns sparse row vector number +i+ of the matrix as a Vector (starting at 0 like
+  # an array).  When a block is given, the non-zero elements of that vector are iterated.
+  #
+  def row_nz(i, &block) # :yield: e
+    raise "NOT IMPLEMENTED"
+    if block_given?
+      @rows.fetch(i){return self}
+      @rows[i].keys.sort do |j|
+        yield @rows[i][j]
+      end
+      self
+    else
+      SparseVector.elements(@rows.fetch(i){return nil})
     end
   end
 
