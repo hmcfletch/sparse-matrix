@@ -107,7 +107,6 @@ class SparseVector < Vector
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:each) unless block_given?
     size.times.each { |i| yield @elements[i] }
-    end
     self
   end
 
@@ -251,7 +250,7 @@ class SparseVector < Vector
   #++
 
   #
-  # Returns +true+ iff the two vectors have the same elements in the same order.
+  # Returns +true+ iff the two sparse vectors have the same elements in the same order.
   #
   def ==(other)
     return false unless SparseVector === other
@@ -264,14 +263,14 @@ class SparseVector < Vector
   end
 
   #
-  # Return a copy of the vector.
+  # Return a copy of the sparse vector.
   #
   def clone
     SparseVector.elements(@elements)
   end
 
   #
-  # Return a hash-code for the vector.
+  # Return a hash-code for the sparse vector.
   #
   def hash
     @elements.hash
@@ -397,7 +396,7 @@ class SparseVector < Vector
   #   Vector[5,8,2].r => 9.643650761
   #
   def r
-    Math.sqrt(@elements.keys.inject(0) { |v, e| v + ( @elements[e] * @elements[e] ) } )
+    Math.sqrt(@elements.values.inject(0) { |v, e| v + ( e * e ) } )
   end
 
   #--
@@ -408,7 +407,6 @@ class SparseVector < Vector
   # Creates a single-row sparse matrix from this sparse vector.
   #
   def covector
-    # raise "NOT IMPLEMENTED"
     SparseMatrix.row_vector(self)
   end
 
