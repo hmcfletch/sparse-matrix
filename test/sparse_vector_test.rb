@@ -7,9 +7,7 @@ end
 
 class TestSparseVector < Test::Unit::TestCase
 
-  def setup
-    # just in case
-  end
+  # CREATION
 
   def test_creation_array
     sv = SparseVector[1,0,2,3,0,0]
@@ -35,6 +33,8 @@ class TestSparseVector < Test::Unit::TestCase
     assert sv3.elems.default == 0
   end
 
+  # ACCESS
+
   def test_access
     sv = SparseVector.elements([0,3,6,2,0,0])
     assert sv[0] == 0
@@ -45,6 +45,8 @@ class TestSparseVector < Test::Unit::TestCase
     assert sv.element(1) == sv[1]
     assert sv.component(1) == sv[1]
   end
+
+  # ENUMERATION
 
   def test_each
     sv = SparseVector.elements([0,3,6,2,0,0])
@@ -134,4 +136,77 @@ class TestSparseVector < Test::Unit::TestCase
 
     assert ret_sv == SparseVector[4,9,0,9,9,0]
   end
+
+  # ARITHMETIC
+
+  def test_addition_sparse_vector
+  end
+
+  def test_addition_vector
+  end
+
+  def test_addition_sparse_matrix
+  end
+
+  def test_addition_matrix
+  end
+
+  def test_subtraction_sparse_vector
+  end
+
+  def test_subtraction_vector
+  end
+
+  def test_subtraction_sparse_matrix
+  end
+
+  def test_subtraction_matrix
+  end
+
+  def test_multiplication_numeric
+  end
+
+  def test_multiplication_sparse_matrix
+  end
+
+  def test_multiplication_matrix
+  end
+
+  def test_division_numeric
+  end
+
+  def test_division_sparse_matrix
+  end
+
+  def test_division_matrix
+  end
+
+  # VECTOR FUNCTIONS
+
+  def test_inner_product
+  end
+
+  def test_r
+  end
+
+  # CONVERTING
+
+  def test_covector
+  end
+
+  def test_to_a
+  end
+
+  def test_to_v
+  end
+
+  def test_elements_to_f
+  end
+
+  def test_elements_to_i
+  end
+
+  def test_elements_to_r
+  end
+
 end
