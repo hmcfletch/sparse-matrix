@@ -22,11 +22,11 @@ class SparseVector < Vector
 
   #
   # Creates a sparse vector from an Array, Vector or Hash.  The optional second argument specifies
-  # whether the array itself or a copy is used internally.  Copy on applies if obj is a Hash since
-  # an Array or Vector will need to be converted into a hash.
+  # whether the array itself or a copy is used internally.  Copy only applies if obj is a Hash since
+  # an Array or Vector will need to be converted into a hash.  Length may be supplied if obj is a Hash.
   #
-  def SparseVector.elements(obj, copy = true)
-    s = obj.is_a?(Array) || obj.is_a?(Vector) ? obj.size : nil
+  def SparseVector.elements(obj, copy = true, length=nil)
+    s = length.nil? ? (obj.is_a?(Array) || obj.is_a?(Vector) ? obj.size : nil) : length
     new convert_to_hash(obj, copy), s
   end
 
@@ -55,7 +55,7 @@ class SparseVector < Vector
 
   def []=(i, v)
     # make sure we take care of 0 values correctly
-    if v == 0 
+    if v == 0 || v.nil?
       if @elements.has_key?(i)
         @elements.delete(i)
       else
@@ -164,7 +164,7 @@ class SparseVector < Vector
   end
 
   #
-  # Collects (as in Enumerable#collect) over the elements of this vector and +v+
+  # Collects (as in Enumerable#collect) over the non-zero elements of this vector and +v+
   # in conjunction.
   #
   # FIXME: figure out what to do with no block
@@ -176,9 +176,11 @@ class SparseVector < Vector
 
     keys = (nz_indicies + v.nz_indicies).uniq.sort
 
-    Array.new(keys.size) do |i|
-      yield @elements[keys[i]], v[keys[i]]
+    array = Array.new(size)
+    keys.each do |i|
+      array[i] = yield @elements[i], v[i]
     end
+    array
   end
 
   #
@@ -191,7 +193,7 @@ class SparseVector < Vector
     @elements.each_pair do |k,v|
       els[k] = yield v
     end
-    SparseVector.elements(els, false)
+    SparseVector.elements(els, false, size)
   end
   alias map collect
 
@@ -202,7 +204,7 @@ class SparseVector < Vector
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:map2, v) unless block_given?
     els = collect2(v, &block)
-    SparseVector.elements(els, false)
+    SparseVector.elements(els, false, size)
   end
 
   #
@@ -224,19 +226,19 @@ class SparseVector < Vector
   #
   def ==(other)
     return false unless SparseVector === other
-    @elements == other.elements
+    @elements == other.elements && size == other.size
   end
 
   def eql?(other)
     return false unless SparseVector === other
-    @elements.eql? other.elements
+    @elements.eql?(other.elements) && size.eql?(other.size)
   end
 
   #
   # Return a copy of the sparse vector.
   #
   def clone
-    SparseVector.elements(@elements)
+    SparseVector.elements(@elements, true, size)
   end
 
   #
@@ -426,6 +428,6 @@ class SparseVector < Vector
   # Overrides Object#inspect
   #
   def inspect
-    str = "SparseVector"+@elements.inspect
+    str = "SparseVector"+@elements.inspect+", #{size}"
   end
 end

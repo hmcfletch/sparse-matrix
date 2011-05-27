@@ -10,11 +10,17 @@ module SM
         copy ? obj.dup : obj
       when Array
         h = {}
-        obj.each_with_index { |j,i| h[i] = j unless j == 0 }
+        obj.each_with_index do |j,i|
+          if j.is_a?(Array) #flattened hashes
+            h[j[0]] = j[1]  unless j[1] == 0 || j[1].nil?
+          else
+            h[i] = j unless j == 0 || j.nil?
+          end
+        end
         h
       when Vector
         h = {}
-        obj.to_a.each_with_index { |j,i| h[i] = j unless j == 0 }
+        obj.to_a.each_with_index { |j,i| h[i] = j unless j == 0 || j.nil? }
         h
       else
         raise "NOT IMPLEMENTED"

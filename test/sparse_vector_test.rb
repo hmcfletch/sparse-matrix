@@ -105,15 +105,33 @@ class TestSparseVector < Test::Unit::TestCase
       k != 0 || l != 0
     end
 
-    assert ret_array == [true,true,true,true]
+    assert ret_array == [true,true,nil,true,true,nil]
   end
 
   def test_collect
+    sv = SparseVector.elements([0,3,0,2,0,0])
+    ret_sv = sv.collect { |v| v * 2 }
+
+    assert ret_sv == SparseVector.elements([0,6,0,4,0,0])
   end
 
   def test_map2
+    sv1 = SparseVector.elements([0,3,0,2,0,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0])
+    ret_sv = sv1.map2(sv2) do |k,l|
+      (k * 2) + l + 3
+    end
+
+    assert ret_sv == SparseVector[4,9,3,9,9,3]
   end
 
   def test_map2_nz
+    sv1 = SparseVector.elements([0,3,0,2,0,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0])
+    ret_sv = sv1.map2_nz(sv2) do |k,l|
+      (k * 2) + l + 3
+    end
+
+    assert ret_sv == SparseVector[4,9,0,9,9,0]
   end
 end
