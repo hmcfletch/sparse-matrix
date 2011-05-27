@@ -140,9 +140,17 @@ class TestSparseVector < Test::Unit::TestCase
   # ARITHMETIC
 
   def test_addition_sparse_vector
+    sv1 = SparseVector.elements([0,3,0,2,0,0,3,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0,5,0])
+
+    assert (sv1 + sv2) == SparseVector[1,3,0,4,6,0,8,0]
   end
 
   def test_addition_vector
+    sv = SparseVector.elements([0,3,0,2,0,0,3,0])
+    v  = Vector.elements([1,0,0,2,6,0,5,0])
+
+    assert (sv + v) == SparseVector[1,3,0,4,6,0,8,0]
   end
 
   def test_addition_sparse_matrix
@@ -152,9 +160,17 @@ class TestSparseVector < Test::Unit::TestCase
   end
 
   def test_subtraction_sparse_vector
+    sv1 = SparseVector.elements([0,3,0,2,0,0,3,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0,5,0])
+
+    assert (sv1 - sv2) == SparseVector[-1,3,0,0,-6,0,-2,0]
   end
 
   def test_subtraction_vector
+    sv = SparseVector.elements([0,3,0,2,0,0,3,0])
+    v  = Vector.elements([1,0,0,2,6,0,5,0])
+
+    assert (sv - v) == SparseVector[-1,3,0,0,-6,0,-2,0]
   end
 
   def test_subtraction_sparse_matrix
@@ -164,6 +180,9 @@ class TestSparseVector < Test::Unit::TestCase
   end
 
   def test_multiplication_numeric
+    sv = SparseVector.elements([0,3,0,2,0,0,3,0])
+
+    assert (sv * 3) == SparseVector[0,9,0,6,0,0,9,0]
   end
 
   def test_multiplication_sparse_matrix
@@ -173,6 +192,9 @@ class TestSparseVector < Test::Unit::TestCase
   end
 
   def test_division_numeric
+    sv = SparseVector.elements([0,8,0,2,0,0,6,0])
+
+    assert (sv / 2) == SparseVector[0,4,0,1,0,0,3,0]
   end
 
   def test_division_sparse_matrix
@@ -184,9 +206,16 @@ class TestSparseVector < Test::Unit::TestCase
   # VECTOR FUNCTIONS
 
   def test_inner_product
+    sv1 = SparseVector.elements([0,3,0,2,0,0,3,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0,5,0])
+
+    assert sv1.inner_product(sv2) == 19
   end
 
   def test_r
+    sv = SparseVector.elements([0,3,0,2,0,0,3,0])
+
+    assert sv.r == Math.sqrt(22)
   end
 
   # CONVERTING
@@ -195,9 +224,15 @@ class TestSparseVector < Test::Unit::TestCase
   end
 
   def test_to_a
+    sv = SparseVector.elements([0,3,0,2,0,0,3,0])
+
+    assert sv.to_a == [0,3,0,2,0,0,3,0]
   end
 
   def test_to_v
+    sv = SparseVector.elements([0,3,0,2,0,0,3,0])
+
+    assert sv.to_v == Vector[0,3,0,2,0,0,3,0]
   end
 
   def test_elements_to_f

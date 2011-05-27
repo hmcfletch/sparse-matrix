@@ -255,22 +255,21 @@ class SparseVector < Vector
   #
   # Multiplies the vector by +x+, where +x+ is a number or another vector.
   #
+  # FIXME: Numeric case should not copy elements
   def *(x)
     case x
     when Numeric
-      h = Hash.new(0)
-      @elements.each_pair { |k,v| h[k] = v * x }
-      SparseVector.elements(h, false)
-    when Matrix
-      raise "NOT IMPLEMENTED"
-      # Matrix.column_vector(self) * x
+      collect { |v| v * x }
     when SparseMatrix
       raise "NOT IMPLEMENTED"
       # SpraseMatrix.column_vector(self) * x
-    when Vector
-      Vector.Raise ErrOperationNotDefined, "*", self.class, x.class
+    when Matrix
+      raise "NOT IMPLEMENTED"
+      # Matrix.column_vector(self) * x
     when SparseVector
       SparseVector.Raise ErrOperationNotDefined, "*", self.class, x.class
+    when Vector
+      Vector.Raise ErrOperationNotDefined, "*", self.class, x.class
     else
       raise "NOT IMPLEMENTED"
       # apply_through_coercion(x, __method__)
@@ -284,19 +283,18 @@ class SparseVector < Vector
     case v
     when SparseVector
       SparseVector.Raise ErrDimensionMismatch if size != v.size
-      els = collect2(v) { |v1, v2|
+      els = collect2_nz(v) { |v1, v2|
         v1 + v2
       }
-      SparseVector.elements(els, false)
+      SparseVector.elements(els, false, size)
     when Vector
       SparseVector.Raise ErrDimensionMismatch if size != v.size
-      
       els = collect2(v) { |v1, v2|
         v1 + v2
       }
-      SparseVector.elements(els, false)
-    when Matrix
-      Matrix.column_vector(self) + v
+      SparseVector.elements(els, false, size)
+    when SparseMatrix
+      SparseMatrix.column_vector(self) + v
     else
       raise "NOT IMPLEMENTED"
       apply_through_coercion(v, __method__)
@@ -313,15 +311,17 @@ class SparseVector < Vector
       els = collect2_nz(v) {|v1, v2|
         v1 - v2
       }
-      SparseVector.elements(els, false)
+      SparseVector.elements(els, false, size)
     when Vector
       SparseVector.Raise ErrDimensionMismatch if size != v.size
-      els = collect2(v) {|v1, v2|
+      els = collect2(v.to_sv) {|v1, v2|
         v1 - v2
       }
-      SparseVector.elements(els, false)
-    when Matrix
+      SparseVector.elements(els, false, size)
+    when SparseMatrix
       SparseMatrix.column_vector(self) - v
+    when Matrix
+      SparseMatrix.column_vector(self) - v.to_sm
     else
       raise "NOT IMPLEMENTED"
       apply_through_coercion(v, __method__)
@@ -331,12 +331,11 @@ class SparseVector < Vector
   #
   # SparseVector division.
   #
+  # FIXME: Numeric case should not copy elements
   def /(x)
     case x
     when Numeric
-      h = Hash.new(0)
-      @elements.each_pair { |k,v| h[k] = v / x }
-      SparseVector.elements(h, false)
+      collect { |v| v / x }
     when Matrix, Vector # covers SparseMatrix and SparseVector
       SparseVector.Raise ErrOperationNotDefined, "/", self.class, x.class
     else
