@@ -1,4 +1,3 @@
-# require 'test_helper'
 require File.expand_path( File.join( File.dirname( __FILE__ ), 'test_helper' ) )
 
 # add somce accessor so we can check under the hood
@@ -6,24 +5,20 @@ class SparseVector
   def elems; @elements end
 end
 
-class SparseMatrix
-  def elems; @rows end
-end
-
-class TestCreation < Test::Unit::TestCase
+class TestSparseVector < Test::Unit::TestCase
 
   def setup
     # just in case
   end
 
-  def test_sv_creation_array
-    sv1 = SparseVector[1,0,2,3,0,0]
-    assert sv1.size == 6
-    assert sv1.elems == { 0 => 1, 2 => 2, 3 => 3 }
-    assert sv1.elems.default == 0
+  def test_creation_array
+    sv = SparseVector[1,0,2,3,0,0]
+    assert sv.size == 6
+    assert sv.elems == { 0 => 1, 2 => 2, 3 => 3 }
+    assert sv.elems.default == 0
   end
 
-  def test_sv_creation_elements
+  def test_creation_elements
     sv1 = SparseVector.elements([0,3,6,2,0,0])
     assert sv1.size == 6
     assert sv1.elems == { 1 => 3, 2 => 6, 3 => 2 }
@@ -40,10 +35,85 @@ class TestCreation < Test::Unit::TestCase
     assert sv3.elems.default == 0
   end
 
-  def test_sm_creation_array
+  def test_access
+    sv = SparseVector.elements([0,3,6,2,0,0])
+    assert sv[0] == 0
+    assert sv[1] == 3
+    assert sv[2] == 6
+    assert sv[3] == 2
+    assert sv[10].nil?
+    assert sv.element(1) == sv[1]
+    assert sv.component(1) == sv[1]
   end
 
-  def test_sm_creation_rows_and_columns
+  def test_each
+    sv = SparseVector.elements([0,3,6,2,0,0])
+    ret_array = []
+    sv.each do |k|
+      ret_array << k
+    end
+
+    assert ret_array == [0,3,6,2,0,0]
   end
 
+  def test_each_nz
+    sv = SparseVector.elements([0,3,6,2,0,0])
+    ret_array = []
+    sv.each_nz do |k|
+      ret_array << k
+    end
+
+    assert ret_array == [3,6,2]
+  end
+
+  def test_each2
+    sv1 = SparseVector.elements([0,3,0,2,0,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0])
+    ret_array = []
+    sv1.each2(sv2) do |k,l|
+      ret_array << [k,l]
+    end
+
+    assert ret_array == [[0,1],[3,0],[0,0],[2,2],[0,6],[0,0]]
+  end
+
+  def test_each2_nz
+    sv1 = SparseVector.elements([0,3,0,2,0,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0])
+    ret_array = []
+    sv1.each2_nz(sv2) do |k,l|
+      ret_array << [k,l]
+    end
+
+    assert ret_array == [[0,1],[3,0],[2,2],[0,6]]
+  end
+
+  def test_collect2
+    sv1 = SparseVector.elements([0,3,0,2,0,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0])
+    ret_array = sv1.collect2(sv2) do |k,l|
+      k != 0 || l != 0
+    end
+
+    assert ret_array == [true,true,false,true,true,false]
+  end
+
+  def test_collect2_nz
+    sv1 = SparseVector.elements([0,3,0,2,0,0])
+    sv2 = SparseVector.elements([1,0,0,2,6,0])
+    ret_array = sv1.collect2_nz(sv2) do |k,l|
+      k != 0 || l != 0
+    end
+
+    assert ret_array == [true,true,true,true]
+  end
+
+  def test_collect
+  end
+
+  def test_map2
+  end
+
+  def test_map2_nz
+  end
 end

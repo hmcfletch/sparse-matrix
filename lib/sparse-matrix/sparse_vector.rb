@@ -92,8 +92,7 @@ class SparseVector < Vector
   #
   def nnz; @elements.size end
 
-  # FIXME: make protected?
-  def sorted_keys; @elements.keys.sort end
+  def nz_indicies; @elements.keys.sort end
 
   #--
   # ENUMERATIONS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -117,7 +116,7 @@ class SparseVector < Vector
   def each_nz(&block)
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:each) unless block_given?
-    sorted_keys.each { |k| yield @elements[k] }
+    nz_indicies.each { |k| yield @elements[k] }
     self
   end
 
@@ -143,28 +142,8 @@ class SparseVector < Vector
     SparseVector.Raise ErrDimensionMismatch if size != v.size
     # return to_enum(:each2, v) unless block_given?
     raise "NOT IMPLEMENTED" unless block_given?
-    sk = sorted_keys
-    v_sk = v.sorted_keys
 
-    i_s = 0
-    i_v = 0
-
-    while i_s < sk.length || i_v < v_sk.length
-      a = i_s < sk.length ? sk[i_s] : nil
-      b = i_v < v_sk.length ? v_sk[i_v] : nil
-
-      i = if a.nil? || (!b.nil? && a > b)
-        i_v += 1
-        b
-      elsif b.nil? || (!a.nil? && a < b)
-        i_s += 1
-        a
-      else # a == b
-        i_s += 1
-        i_v += 1
-        a
-      end
-
+    (nz_indicies + v.nz_indicies).uniq.sort.each do |i|
       yield @elements[i], v[i]
     end
   end
@@ -195,54 +174,45 @@ class SparseVector < Vector
     # return to_enum(:collect2, v) unless block_given?
     raise "NOT IMPLEMENTED" unless block_given?
 
-    h = Hash.new(0)
-    sk = sorted_keys
-    v_sk = v.sorted_keys
+    keys = (nz_indicies + v.nz_indicies).uniq.sort
 
-    i_s = 0
-    i_v = 0
-
-    while i_s < sk.length || i_v < v_sk.length
-      a = i_s < sk.length ? sk[i_s] : nil
-      b = i_v < v_sk.length ? v_sk[i_v] : nil
-
-      i = if a.nil? || (!b.nil? && a > b)
-        i_v += 1
-        b
-      elsif b.nil? ||(!a.nil? && a < b)
-        i_s += 1
-        a
-      else # a == b
-        i_s += 1
-        i_v += 1
-        a
-      end
-
-      h[i] = yield @elements[i], v[i]
+    Array.new(keys.size) do |i|
+      yield @elements[keys[i]], v[keys[i]]
     end
-
-    h
   end
 
   #
   # Like Array#collect.
   #
   def collect(&block) # :yield: e
-    raise "NOT IMPLEMENTED"
+    raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:collect) unless block_given?
-    # els = @elements.collect(&block)
-    # Vector.elements(els, false)
+    els = {}
+    @elements.each_pair do |k,v|
+      els[k] = yield v
+    end
+    SparseVector.elements(els, false)
   end
   alias map collect
 
   #
-  # Like Vector#collect2, but returns a Vector instead of an Array.
+  # Like SparseVector#collect2, but returns a SparseVector instead of an Array.
   #
   def map2(v, &block) # :yield: e1, e2
-    raise "NOT IMPLEMENTED"
+    raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:map2, v) unless block_given?
-    # els = collect2(v, &block)
-    # Vector.elements(els, false)
+    els = collect2(v, &block)
+    SparseVector.elements(els, false)
+  end
+
+  #
+  # Like SparseVector#collect2, but returns a SparseVector instead of a Hash.
+  #
+  def map2_nz(v, &block) # :yield: e1, e2
+    raise "NOT IMPLEMENTED" unless block_given?
+    # return to_enum(:map2, v) unless block_given?
+    els = collect2_nz(v, &block)
+    SparseVector.elements(els, false)
   end
 
   #--
