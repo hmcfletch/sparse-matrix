@@ -183,6 +183,12 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_empty?
+    sm1 = SparseMatrix.rows([])
+    assert sm1.empty?
+    sm2 = SparseMatrix.rows([[1,0,0],[3,0,0],[0,4,0]])
+    assert !sm2.empty?
+    sm3 = SparseMatrix.empty
+    assert sm3.empty?
   end
 
   def test_real?
@@ -195,9 +201,20 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_square?
+    sms = SparseMatrix.rows([[1,0,0],[3,0,0],[0,4,0]])
+    assert sms.square?
+    smr = SparseMatrix.rows([[1,0],[3,0],[0,4]])
+    assert !smr.square?
   end
 
   def test_transpose
+    sm1 = SparseMatrix.rows([[1,0],[3,0],[0,4]])
+    assert sm1.row_size == 3
+    assert sm1.column_size == 2
+    smt = sm1.transpose
+    assert smt.row_size == 2
+    assert smt.column_size == 3
+    assert smt == SparseMatrix.rows([[1,3,0],[0,0,4]])
   end
 
 end
