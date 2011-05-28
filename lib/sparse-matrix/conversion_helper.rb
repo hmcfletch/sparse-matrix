@@ -11,11 +11,7 @@ module SM
       when Array
         h = {}
         obj.each_with_index do |j,i|
-          if j.is_a?(Array) #flattened hashes
-            h[j[0]] = j[1]  unless j[1] == 0 || j[1].nil?
-          else
-            h[i] = j unless j == 0 || j.nil?
-          end
+          h[i] = j unless j == 0 || j.nil?
         end
         h
       when Vector

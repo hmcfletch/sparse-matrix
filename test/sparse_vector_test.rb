@@ -12,6 +12,7 @@ class TestSparseVector < Test::Unit::TestCase
   def test_creation_array
     sv = SparseVector[1,0,2,3,0,0]
     assert sv.size == 6
+    assert sv.nnz == 3
     assert sv.elems == { 0 => 1, 2 => 2, 3 => 3 }
     assert sv.elems.default == 0
   end
@@ -19,16 +20,19 @@ class TestSparseVector < Test::Unit::TestCase
   def test_creation_elements
     sv1 = SparseVector.elements([0,3,6,2,0,0])
     assert sv1.size == 6
+    assert sv1.nnz == 3
     assert sv1.elems == { 1 => 3, 2 => 6, 3 => 2 }
     assert sv1.elems.default == 0
 
     sv2 = SparseVector.elements({ 2 => 3, 5 => 1, 6 => 7 })
     assert sv2.size == 7
+    assert sv2.nnz == 3
     assert sv2.elems == { 2 => 3, 5 => 1, 6 => 7 }
     assert sv2.elems.default == 0
 
     sv3 = SparseVector.elements(Vector[0,2,4,0,0,1,0,0])
     assert sv3.size == 8
+    assert sv3.nnz == 3
     assert sv3.elems == { 1 => 2, 2 => 4, 5 => 1 }
     assert sv3.elems.default == 0
   end

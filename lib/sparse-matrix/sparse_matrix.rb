@@ -44,7 +44,6 @@ class SparseMatrix < Matrix
       # remove the row if it is empty
       rows.delete(k) if rows[k].empty?
     end
-
     new rows, num_rows, num_columns
   end
 
@@ -144,9 +143,9 @@ class SparseMatrix < Matrix
   #
   def SparseMatrix.row_vector(row)
     if row.is_a?(Hash)
-      new convert_to_hash(row)
+      new ({ 0 => convert_to_hash(row) })
     else
-      new convert_to_hash(row), 1, row.size
+      new ({ 0 => convert_to_hash(row) }), 1, row.size
     end
   end
 
