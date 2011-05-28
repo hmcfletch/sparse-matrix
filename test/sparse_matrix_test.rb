@@ -138,6 +138,66 @@ class TestSparseMatrix < Test::Unit::TestCase
   def test_access
     sm = SparseMatrix[[1,0,2],[3,0,0],[0,4,5]]
     assert sm[0,0] == 1
+    assert sm[0,1] == 0
+    assert sm[0,2] == 2
+    assert sm[1,0] == 3
+    assert sm[1,1] == 0
+    assert sm[1,2] == 0
+    assert sm[2,0] == 0
+    assert sm[2,1] == 4
+    assert sm[2,2] == 5
+    assert sm[3,3] == nil
+  end
+
+  def test_row_no_block
+  end
+
+  def test_row_block
+  end
+
+  def test_row_nz_no_block
+  end
+
+  def test_row_nz_block
+  end
+
+  def test_column_no_block
+  end
+
+  def test_column_block
+  end
+
+  def test_column_nz_no_block
+  end
+
+  def test_column_nz_block
+  end
+
+  def test_collect
+  end
+
+  def test_each
+  end
+
+  def test_each_with_index
+  end
+
+  def test_empty?
+  end
+
+  def test_real?
+  end
+
+  def test_regular?
+  end
+
+  def test_singular?
+  end
+
+  def test_square?
+  end
+
+  def test_transpose
   end
 
 end
