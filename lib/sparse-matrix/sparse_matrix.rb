@@ -418,11 +418,11 @@ class SparseMatrix < Matrix
   #     # => 4 at 1, 1
   #
   def each_with_index(&block) # :yield: e, row, column
-    raise "NOT IMPLEMENTED"
-    return to_enum(:each_with_index) unless block_given?
-    @rows.each_with_index do |row, row_index|
-      row.each_with_index do |e, col_index|
-        yield e, row_index, col_index
+    raise "NOT IMPLEMENTED" unless block_given?
+    # return to_enum(:each) unless block_given?
+    row_size.times do |i|
+      column_size.times do |j|
+        yield self[i,j], i, j
       end
     end
     self
@@ -441,11 +441,19 @@ class SparseMatrix < Matrix
   #     # => 4 at 1, 1
   #
   def each_with_index_nz(&block) # :yield: e, row, column
-    raise "NOT IMPLEMENTED"
-    return to_enum(:each_with_index) unless block_given?
-    @rows.each_with_index do |row, row_index|
-      row.each_with_index do |e, col_index|
-        yield e, row_index, col_index
+    # raise "NOT IMPLEMENTED"
+    # return to_enum(:each_with_index) unless block_given?
+    # @rows.each_with_index do |row, row_index|
+    #   row.each_with_index do |e, col_index|
+    #     yield e, row_index, col_index
+    #   end
+    # end
+    # self
+    raise "NOT IMPLEMENTED" unless block_given?
+    # return to_enum(:each) unless block_given?
+    @rows.keys.sort.each do |i|
+      @rows[i].keys.sort.each do |j|
+        yield self[i,j], i, j
       end
     end
     self

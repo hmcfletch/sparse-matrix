@@ -270,9 +270,33 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_each_with_index
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    vals = []
+    sm.each_with_index do |k,i,j|
+      vals << [i,j,k]
+    end
+    assert vals[0] == [0,0,1]
+    assert vals[1] == [0,1,3]
+    assert vals[2] == [0,2,0]
+    assert vals[3] == [1,0,0]
+    assert vals[4] == [1,1,0]
+    assert vals[5] == [1,2,4]
+    assert vals[6] == [2,0,3]
+    assert vals[7] == [2,1,9]
+    assert vals[8] == [2,2,0]
   end
 
   def test_each_with_index_nz
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    vals = []
+    sm.each_with_index_nz do |k,i,j|
+      vals << [i,j,k]
+    end
+    assert vals[0] == [0,0,1]
+    assert vals[1] == [0,1,3]
+    assert vals[2] == [1,2,4]
+    assert vals[3] == [2,0,3]
+    assert vals[4] == [2,1,9]
   end
 
   def test_empty?
