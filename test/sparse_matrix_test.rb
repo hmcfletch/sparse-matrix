@@ -234,12 +234,27 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_collect
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    smc = sm.collect { |v| v - 3 }
+    assert smc == SparseMatrix.rows([[-2,0,-3],[-3,-3,1],[0,6,-3]])
+  end
+
+  def test_collect_nz
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    smc = sm.collect_nz { |v| v - 3 }
+    assert smc == SparseMatrix.rows([[-2,0,0],[0,0,1],[0,6,0]])
   end
 
   def test_each
   end
 
+  def test_each_nz
+  end
+
   def test_each_with_index
+  end
+
+  def test_each_with_index_nz
   end
 
   def test_empty?
