@@ -338,7 +338,6 @@ class SparseMatrix < Matrix
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:collect) unless block_given?
     rows = {}
-
     row_size.times do |i|
       rows[i] = {}
       column_size.times do |j|
@@ -361,7 +360,6 @@ class SparseMatrix < Matrix
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:collect_nz) unless block_given?
     rows = {}
-
     @rows.keys.sort.each do |i|
       rows[i] = {}
       @rows[i].keys.sort.each do |j|
@@ -374,33 +372,35 @@ class SparseMatrix < Matrix
   alias map_nz collect_nz
 
   #
-  # Yields all elements of the matrix, starting with those of the first row,
+  # Yields all elements of the sparse matrix, starting with those of the first row,
   # or returns an Enumerator is no block given
-  #   Matrix[ [1,2], [3,4] ].each { |e| puts e }
+  #   SparseMatrix[ [1,2], [3,4] ].each { |e| puts e }
   #     # => prints the numbers 1 to 4
   #
   def each(&block) # :yield: e
-    raise "NOT IMPLEMENTED"
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:each) unless block_given?
-    @rows.each do |row|
-      row.each(&block)
+    row_size.times do |i|
+      column_size.times do |j|
+        yield self[i,j]
+      end
     end
     self
   end
 
   #
-  # Yields all elements of the matrix, starting with those of the first row,
+  # Yields all non-zero elements of the sparse matrix, starting with those of the first row,
   # or returns an Enumerator is no block given
-  #   Matrix[ [1,2], [3,4] ].each { |e| puts e }
+  #   SparseMatrix[ [1,2], [3,4] ].each { |e| puts e }
   #     # => prints the numbers 1 to 4
   #
   def each_nz(&block) # :yield: e
-    raise "NOT IMPLEMENTED"
     raise "NOT IMPLEMENTED" unless block_given?
     # return to_enum(:each) unless block_given?
-    @rows.each do |row|
-      row.each(&block)
+    @rows.keys.sort.each do |i|
+      @rows[i].keys.sort.each do |j|
+        yield self[i,j]
+      end
     end
     self
   end

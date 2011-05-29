@@ -246,9 +246,27 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_each
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    num_nz = 0
+    num_z = 0
+    sm.each do |v|
+      num_nz += 1 if v != 0
+      num_z  += 1 if v == 0
+    end
+    assert num_nz == 5
+    assert num_z == 4
   end
 
   def test_each_nz
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    num_nz = 0
+    num_z = 0
+    sm.each_nz do |v|
+      num_nz += 1 if v != 0
+      num_z  += 1 if v == 0
+    end
+    assert num_nz == 5
+    assert num_z == 0
   end
 
   def test_each_with_index
