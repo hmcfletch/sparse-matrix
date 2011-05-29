@@ -255,15 +255,15 @@ class SparseMatrix < Matrix
   # an array).  When a block is given, the elements of that vector are iterated.
   #
   def row(i, &block) # :yield: e
-    i = i < 0 ? row_size - i : i
+    i = i < 0 ? row_size + i : i
     if block_given?
-      @rows.fetch(i){return self}
+      @rows.fetch(i){ return self }
       column_size.times do |j|
         yield @rows[i][j]
       end
       self
     else
-      SparseVector.elements(@rows.fetch(i){return nil})
+      SparseVector.elements(@rows.fetch(i){ return nil }, false, column_size)
     end
   end
 
@@ -274,13 +274,13 @@ class SparseMatrix < Matrix
   def row_nz(i, &block) # :yield: e
     i = i < 0 ? row_size + i : i
     if block_given?
-      @rows.fetch(i){return self}
-      @rows[i].keys.sort do |j|
+      @rows.fetch(i){ return self }
+      @rows[i].keys.sort.each do |j|
         yield @rows[i][j]
       end
       self
     else
-      SparseVector.elements(@rows.fetch(i){return nil})
+      SparseVector.elements(@rows.fetch(i){ return nil }, false, column_size)
     end
   end
 
@@ -301,7 +301,7 @@ class SparseMatrix < Matrix
       col = Array.new(row_size) { |i|
         @rows[i][j]
       }
-      SparseVector.elements(col, false)
+      SparseVector.elements(col, false, row_size)
     end
   end
 
@@ -314,6 +314,7 @@ class SparseMatrix < Matrix
     if block_given?
       return self if j >= column_size
       row_size.times do |i|
+        next unless @rows.has_key?(i) && @rows[i].has_key?(j)
         yield @rows[i][j]
       end
       self
@@ -322,7 +323,7 @@ class SparseMatrix < Matrix
       col = Array.new(row_size) { |i|
         @rows[i][j]
       }
-      SparseVector.elements(col, false)
+      SparseVector.elements(col, false, row_size)
     end
   end
 

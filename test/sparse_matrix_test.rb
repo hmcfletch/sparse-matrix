@@ -150,27 +150,87 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_row_no_block
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0],[0,0,5],[6,0,0],[2,0,6],[0,4,0]])
+    assert sm.row(0) == SparseVector[1,3,0]
+    assert sm.row(2) == SparseVector[3,9,0]
+    assert sm.row(-1) == SparseVector[0,4,0]
+    assert sm.row(-3) == SparseVector[6,0,0]
   end
 
   def test_row_block
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    a = 0
+    sm.row(0) { |v| a += v }
+    assert a == 4
+    a = 0
+    sm.row(1) { |v| a += 1 if v != 0 }
+    assert a == 1
+    a = 0
+    sm.row(-2) { |v| a += 1 if v == 0 }
+    assert a == 2
   end
 
   def test_row_nz_no_block
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0],[0,0,5],[6,0,0],[2,0,6],[0,4,0]])
+    assert sm.row_nz(0) == SparseVector[1,3,0]
+    assert sm.row_nz(2) == SparseVector[3,9,0]
+    assert sm.row_nz(-1) == SparseVector[0,4,0]
+    assert sm.row_nz(-3) == SparseVector[6,0,0]
   end
 
   def test_row_nz_block
+    sm = SparseMatrix.rows([[1,3,0],[0,0,4],[3,9,0]])
+    a = 0
+    sm.row_nz(0) { |v| a += 1 }
+    assert a == 2
+    a = 0
+    sm.row_nz(1) { |v| a += 1 if v != 0 }
+    assert a == 1
+    a = 0
+    sm.row_nz(-1) { |v| a += 1 if v == 0 }
+    assert a == 0
   end
 
   def test_column_no_block
+    sm = SparseMatrix.columns([[1,3,0],[0,0,4],[3,9,0],[0,0,5],[6,0,0],[2,0,6],[0,4,0]])
+    assert sm.column(0) == SparseVector[1,3,0]
+    assert sm.column(2) == SparseVector[3,9,0]
+    assert sm.column(-1) == SparseVector[0,4,0]
+    assert sm.column(-3) == SparseVector[6,0,0]
   end
 
   def test_column_block
+    sm = SparseMatrix.columns([[1,3,0],[0,0,4],[3,9,0]])
+    a = 0
+    sm.column(0) { |v| a += v }
+    assert a == 4
+    a = 0
+    sm.column(1) { |v| a += 1 if v != 0 }
+    assert a == 1
+    a = 0
+    sm.column(-2) { |v| a += 1 if v == 0 }
+    assert a == 2
   end
 
   def test_column_nz_no_block
+    sm = SparseMatrix.columns([[1,3,0],[0,0,4],[3,9,0],[0,0,5],[6,0,0],[2,0,6],[0,4,0]])
+    assert sm.column_nz(0) == SparseVector[1,3,0]
+    assert sm.column_nz(2) == SparseVector[3,9,0]
+    assert sm.column_nz(-1) == SparseVector[0,4,0]
+    assert sm.column_nz(-3) == SparseVector[6,0,0]
   end
 
   def test_column_nz_block
+    sm = SparseMatrix.columns([[1,3,0],[0,0,4],[3,9,0]])
+    a = 0
+    sm.column_nz(0) { |v| a += 1 }
+    assert a == 2
+    a = 0
+    sm.column_nz(1) { |v| a += 1 if v != 0 }
+    assert a == 1
+    a = 0
+    sm.column_nz(-1) { |v| a += 1 if v == 0 }
+    assert a == 0
   end
 
   def test_collect
