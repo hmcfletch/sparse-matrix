@@ -276,6 +276,12 @@ class SparseMatrix < Matrix
     end
   end
 
+  def row?(i)
+    return @rows[i].empty?
+  end
+
+  private :row?
+
   #
   # Returns sparse row vector number +i+ of the matrix as a Vector (starting at 0 like
   # an array).  When a block is given, the non-zero elements of that vector are iterated.
@@ -592,6 +598,8 @@ class SparseMatrix < Matrix
 
       c = {}
       row_size.times do |i|
+        # if the row is all 0's then skip it
+        next unless row?(i)
         c[i] = {}
         m.column_size.times do |j|
           c_ij = 0
