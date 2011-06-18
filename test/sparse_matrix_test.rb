@@ -299,6 +299,9 @@ class TestSparseMatrix < Test::Unit::TestCase
     assert vals[4] == [2,1,9]
   end
 
+  def test_minor
+  end
+
   def test_empty?
     sm1 = SparseMatrix.rows([])
     assert sm1.empty?
@@ -325,13 +328,40 @@ class TestSparseMatrix < Test::Unit::TestCase
   end
 
   def test_transpose
-    sm1 = SparseMatrix.rows([[1,0],[3,0],[0,4]])
-    assert sm1.row_size == 3
-    assert sm1.column_size == 2
-    smt = sm1.transpose
+    sm = SparseMatrix.rows([[1,0],[3,0],[0,4]])
+    assert sm.row_size == 3
+    assert sm.column_size == 2
+    smt = sm.transpose
     assert smt.row_size == 2
     assert smt.column_size == 3
     assert smt == SparseMatrix.rows([[1,3,0],[0,0,4]])
+  end
+
+  def test_multiplication_numeric
+    sm = SparseMatrix.rows([[1,0],[3,0],[0,4]])
+    smn = sm * 2
+    assert smn == SparseMatrix[[2,0],[6,0],[0,8]]
+  end
+
+  def test_multiplication_vector
+  end
+
+  def test_multiplication_matrix
+    puts ""
+    m1 = Matrix.rows([[1,0],[3,0],[0,4]])
+    m2 = Matrix.rows([[4,0,0,5],[2,0,7,0]])
+    mr = m1 * m2
+    puts m1.inspect
+    puts m2.inspect
+    puts mr.inspect
+    sm1 = SparseMatrix.rows([[1,0],[3,0],[0,4]])
+    sm2 = SparseMatrix.rows([[4,0,0,5],[2,0,7,0]])
+    smr = sm1 * sm2
+    puts sm1.inspect
+    puts sm2.inspect
+    puts smr.inspect
+    puts "+++++++"
+    assert smr == mr.to_sm
   end
 
 end

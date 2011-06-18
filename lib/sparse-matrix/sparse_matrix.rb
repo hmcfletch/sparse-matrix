@@ -223,7 +223,8 @@ class SparseMatrix < Matrix
   # Returns element (+i+,+j+) of the matrix.  That is: row +i+, column +j+.
   #
   def [](i, j)
-    @rows.fetch(i){ return nil }[j]
+    return nil if i >= row_size || j >= column_size
+    @rows.fetch(i){ return 0 }[j]
   end
   alias element []
   alias component []
@@ -242,9 +243,16 @@ class SparseMatrix < Matrix
     @row_size
   end
 
+  def row_size=(val); @row_size = val end
+
+  #
+  # Returns the number of columns.
+  #
   def column_size
     @column_size
   end
+
+  def column_size=(val); @column_size = val end
 
   def nnz
     @rows.values.inject(0) { |m,v| m + v.size }
@@ -255,6 +263,7 @@ class SparseMatrix < Matrix
   # an array).  When a block is given, the elements of that vector are iterated.
   #
   def row(i, &block) # :yield: e
+    return nil if i >= row_size
     i = i < 0 ? row_size + i : i
     if block_given?
       @rows.fetch(i){ return self }
@@ -263,7 +272,7 @@ class SparseMatrix < Matrix
       end
       self
     else
-      SparseVector.elements(@rows.fetch(i){ return nil }, false, column_size)
+      SparseVector.elements(@rows.fetch(i){ Array.new(column_size,0) }, false, column_size)
     end
   end
 
@@ -272,6 +281,7 @@ class SparseMatrix < Matrix
   # an array).  When a block is given, the non-zero elements of that vector are iterated.
   #
   def row_nz(i, &block) # :yield: e
+    return nil if i >= row_size
     i = i < 0 ? row_size + i : i
     if block_given?
       @rows.fetch(i){ return self }
@@ -280,7 +290,7 @@ class SparseMatrix < Matrix
       end
       self
     else
-      SparseVector.elements(@rows.fetch(i){ return nil }, false, column_size)
+      SparseVector.elements(@rows.fetch(i){ Array.new(column_size,0) }, false, column_size)
     end
   end
 
@@ -289,6 +299,7 @@ class SparseMatrix < Matrix
   # like an array).  When a block is given, the elements of that vector are iterated.
   #
   def column(j) # :yield: e
+    return nil if i >= column_size
     j = j < 0 ? column_size + j : j
     if block_given?
       return self if j >= column_size
@@ -310,6 +321,7 @@ class SparseMatrix < Matrix
   # like an array).  When a block is given, the non-zero elements of that vector are iterated.
   #
   def column_nz(j) # :yield: e
+    return nil if i >= column_size
     j = j < 0 ? column_size + j : j
     if block_given?
       return self if j >= column_size
@@ -456,6 +468,23 @@ class SparseMatrix < Matrix
     self
   end
 
+  #
+  # Returns a section of the matrix.  The parameters are either:
+  # *  start_row, nrows, start_col, ncols; OR
+  # *  row_range, col_range
+  #
+  #   Matrix.diagonal(9, 5, -3).minor(0..1, 0..2)
+  #     => 9 0 0
+  #        0 5 0
+  #
+  # Like Array#[], negative indices count backward from the end of the
+  # row or column (-1 is the last element). Returns nil if the starting
+  # row or column is greater than row_size or column_size respectively.
+  #
+  def minor(*param)
+    raise "NOT IMPLEMENTED"
+  end
+
   #--
   # TESTING -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   #++
@@ -525,7 +554,7 @@ class SparseMatrix < Matrix
   #
   def clone
     raise "NOT IMPLEMENTED"
-    new_matrix @rows.map(&:dup), column_size
+    new_matrix @rows.map(&:dup), row_size, column_size
   end
 
   #
@@ -539,10 +568,185 @@ class SparseMatrix < Matrix
   # ARITHMETIC -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   #++
 
+  #
+  # Matrix multiplication.
+  #   Matrix[[2,4], [6,8]] * Matrix.identity(2)
+  #     => 2 4
+  #        6 8
+  #
+  def *(m) # m is matrix or vector or number
+    case(m)
+    when Numeric
+      rows = {}
+      @rows.keys.each do |i|
+        rows[i] = {}
+        @rows[i].keys.each { |j| rows[i][j] = @rows[i][j] * m }
+      end
+      return new_matrix rows, row_size, column_size
+    when SparseVector
+      m = SparseMatrix.column_vector(m)
+      r = self * m
+      return r.column(0)
+    when SparseMatrix
+      SparseMatrix.Raise ErrDimensionMismatch if column_size != m.row_size
+
+      c = {}
+      row_size.times do |i|
+        c[i] = {}
+        m.column_size.times do |j|
+          c_ij = 0
+          @rows[i].each_pair do |k,v|
+            c_ij += v * m[k,j]
+          end
+          c[i][j] = c_ij unless c_ij == 0
+        end
+      end
+
+      return new_matrix c, row_size, m.column_size
+    else
+      raise "NOT IMPLEMENTED"
+      # return apply_through_coercion(m, __method__)
+    end
+  end
+
+  #
+  # Matrix addition.
+  #   Matrix.scalar(2,5) + Matrix[[1,0], [-4,7]]
+  #     =>  6  0
+  #        -4 12
+  #
+  def +(m)
+    raise "NOT IMPLEMENTED"
+  end
+
+  #
+  # Matrix subtraction.
+  #   Matrix[[1,5], [4,2]] - Matrix[[9,3], [-4,1]]
+  #     => -8  2
+  #         8  1
+  #
+  def -(m)
+    raise "NOT IMPLEMENTED"
+  end
+
+  #
+  # Matrix division (multiplication by the inverse).
+  #   Matrix[[7,6], [3,9]] / Matrix[[2,9], [3,1]]
+  #     => -7  1
+  #        -3 -6
+  #
+  def /(other)
+    raise "NOT IMPLEMENTED"
+  end
+
+  #
+  # Returns the inverse of the matrix.
+  #   Matrix[[-1, -1], [0, -1]].inverse
+  #     => -1  1
+  #         0 -1
+  #
+  def inverse
+    raise "NOT IMPLEMENTED"
+  end
+
+  def inverse_from(src) # :nodoc:
+    raise "NOT IMPLEMENTED"
+  end
+  private :inverse_from
+
+  #
+  # Matrix exponentiation.  Currently implemented for integer powers only.
+  # Equivalent to multiplying the matrix by itself N times.
+  #   Matrix[[7,6], [3,9]] ** 2
+  #     => 67 96
+  #        48 99
+  #
+  def ** (other)
+    raise "NOT IMPLEMENTED"
+  end
+
   #--
   # MATRIX FUNCTIONS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   #++
 
+  #
+  # Returns the determinant of the matrix.
+  #
+  # Beware that using Float values can yield erroneous results
+  # because of their lack of precision.
+  # Consider using exact types like Rational or BigDecimal instead.
+  #
+  #   Matrix[[7,6], [3,9]].determinant
+  #     => 45
+  #
+  def determinant
+    raise "NOT IMPLEMENTED"
+  end
+  alias_method :det, :determinant
+
+  #
+  # Private. Use Matrix#determinant
+  #
+  # Returns the determinant of the matrix, using
+  # Bareiss' multistep integer-preserving gaussian elimination.
+  # It has the same computational cost order O(n^3) as standard Gaussian elimination.
+  # Intermediate results are fraction free and of lower complexity.
+  # A matrix of Integers will have thus intermediate results that are also Integers,
+  # with smaller bignums (if any), while a matrix of Float will usually have
+  # intermediate results with better precision.
+  #
+  def determinant_bareiss
+    raise "NOT IMPLEMENTED"
+  end
+  private :determinant_bareiss
+
+  #
+  # deprecated; use Matrix#determinant
+  #
+  def determinant_e
+    raise "NOT IMPLEMENTED"
+    warn "#{caller(1)[0]}: warning: Matrix#determinant_e is deprecated; use #determinant"
+    rank
+  end
+  alias det_e determinant_e
+
+  #
+  # Returns the rank of the matrix.
+  # Beware that using Float values can yield erroneous results
+  # because of their lack of precision.
+  # Consider using exact types like Rational or BigDecimal instead.
+  #
+  #   Matrix[[7,6], [3,9]].rank
+  #     => 2
+  #
+  def rank
+    raise "NOT IMPLEMENTED"
+  end
+
+  #
+  # deprecated; use Matrix#rank
+  #
+  def rank_e
+    raise "NOT IMPLEMENTED"
+    warn "#{caller(1)[0]}: warning: Matrix#rank_e is deprecated; use #rank"
+    rank
+  end
+
+  #
+  # Returns the trace (sum of diagonal elements) of the matrix.
+  #   Matrix[[7,6], [3,9]].trace
+  #     => 16
+  #
+  def trace
+    raise "NOT IMPLEMENTED"
+    Matrix.Raise ErrDimensionMismatch unless square?
+    (0...column_size).inject(0) do |tr, i|
+      tr + @rows[i][i]
+    end
+  end
+  alias tr trace
+
+  
   #
   # Returns the transpose of the matrix.
   #   Matrix[[1,2], [3,4], [5,6]]
@@ -566,6 +770,16 @@ class SparseMatrix < Matrix
   #--
   # CONVERTING -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   #++
+
+  def to_m
+    rows = Array.new(row_size) do |i|
+      r = Array.new(column_size,0)
+      v = row(i)
+      v.nz_indicies.each { |j| r[j] = v[j] } unless v.nil?
+      r
+    end
+    Matrix.rows(rows)
+  end
 
   #--
   # PRINTING -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -591,7 +805,7 @@ class SparseMatrix < Matrix
     if empty?
       "SparseMatrix.empty(#{row_size}, #{column_size})"
     else
-      "SparseMatrix#{@rows.inspect}"
+      "SparseMatrix#{@rows.inspect}, [#{row_size},#{column_size}]"
     end
   end
 
