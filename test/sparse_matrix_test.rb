@@ -351,16 +351,9 @@ class TestSparseMatrix < Test::Unit::TestCase
     m1 = Matrix.rows([[1,0],[3,0],[0,4]])
     m2 = Matrix.rows([[4,0,0,5],[2,0,7,0]])
     mr = m1 * m2
-    puts m1.inspect
-    puts m2.inspect
-    puts mr.inspect
     sm1 = SparseMatrix.rows([[1,0],[3,0],[0,4]])
     sm2 = SparseMatrix.rows([[4,0,0,5],[2,0,7,0]])
     smr = sm1 * sm2
-    puts sm1.inspect
-    puts sm2.inspect
-    puts smr.inspect
-    puts "+++++++"
     assert smr == mr.to_sm
   end
 

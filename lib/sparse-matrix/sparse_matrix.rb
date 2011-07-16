@@ -598,8 +598,6 @@ class SparseMatrix < Matrix
 
       c = {}
       row_size.times do |i|
-        # if the row is all 0's then skip it
-        next unless row?(i)
         c[i] = {}
         m.column_size.times do |j|
           c_ij = 0
