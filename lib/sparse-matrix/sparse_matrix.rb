@@ -305,7 +305,7 @@ class SparseMatrix < Matrix
   # like an array).  When a block is given, the elements of that vector are iterated.
   #
   def column(j) # :yield: e
-    return nil if i >= column_size
+    return nil if j >= column_size
     j = j < 0 ? column_size + j : j
     if block_given?
       return self if j >= column_size
@@ -327,7 +327,7 @@ class SparseMatrix < Matrix
   # like an array).  When a block is given, the non-zero elements of that vector are iterated.
   #
   def column_nz(j) # :yield: e
-    return nil if i >= column_size
+    return nil if j >= column_size
     j = j < 0 ? column_size + j : j
     if block_given?
       return self if j >= column_size
@@ -598,8 +598,6 @@ class SparseMatrix < Matrix
 
       c = {}
       row_size.times do |i|
-        # if the row is all 0's then skip it
-        next unless row?(i)
         c[i] = {}
         m.column_size.times do |j|
           c_ij = 0
@@ -754,7 +752,7 @@ class SparseMatrix < Matrix
   end
   alias tr trace
 
-  
+
   #
   # Returns the transpose of the matrix.
   #   Matrix[[1,2], [3,4], [5,6]]
