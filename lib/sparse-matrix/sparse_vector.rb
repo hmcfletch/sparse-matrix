@@ -103,8 +103,7 @@ class SparseVector < Vector
   #
   # FIXME: figure out what to do with no block
   def each(&block)
-    raise "NOT IMPLEMENTED" unless block_given?
-    # return to_enum(:each) unless block_given?
+    return to_enum(:each) unless block_given?
     size.times.each { |i| yield @elements[i] }
     self
   end
@@ -114,8 +113,7 @@ class SparseVector < Vector
   #
   # FIXME: figure out what to do with no block
   def each_nz(&block)
-    raise "NOT IMPLEMENTED" unless block_given?
-    # return to_enum(:each) unless block_given?
+    return to_enum(:each_nz) unless block_given?
     nz_indicies.each { |k| yield @elements[k] }
     self
   end
@@ -126,7 +124,7 @@ class SparseVector < Vector
   # FIXME: figure out what to do with no block
   def each2(v) # :yield: e1, e2
     SparseVector.Raise ErrDimensionMismatch if size != v.size
-    raise "NOT IMPLEMENTED" unless block_given?
+    return to_enum(:each2, v) unless block_given?
     size.times do |i|
       yield @elements[i], v[i]
     end
@@ -140,7 +138,7 @@ class SparseVector < Vector
   def each2_nz(v) # :yield: e1, e2
     raise TypeError, "Integer is not like SparseVector" if v.kind_of?(Integer)
     SparseVector.Raise ErrDimensionMismatch if size != v.size
-    # return to_enum(:each2, v) unless block_given?
+    return to_enum(:each2_nz, v) unless block_given?
     raise "NOT IMPLEMENTED" unless block_given?
 
     (nz_indicies + v.nz_indicies).uniq.sort.each do |i|
@@ -154,10 +152,9 @@ class SparseVector < Vector
   #
   # FIXME: figure out what to do with no block
   def collect2(v) # :yield: e1, e2
-    raise "NOT IMPLEMENTED" unless block_given?
     raise TypeError, "Integer is not like SparseVector" if v.kind_of?(Integer)
     SparseVector.Raise ErrDimensionMismatch if size != v.size
-    # return to_enum(:collect2, v) unless block_given?
+    return to_enum(:collect2, v) unless block_given?
     Array.new(size) do |i|
       yield @elements[i], v[i]
     end
@@ -171,8 +168,7 @@ class SparseVector < Vector
   # FIXME: only works with another SparseVector
   def collect2_nz(v) # :yield: e1, e2
     SparseVector.Raise ErrDimensionMismatch if size != v.size
-    # return to_enum(:collect2, v) unless block_given?
-    raise "NOT IMPLEMENTED" unless block_given?
+    return to_enum(:collect2_nz, v) unless block_given?
 
     keys = (nz_indicies + v.nz_indicies).uniq.sort
 
@@ -187,8 +183,7 @@ class SparseVector < Vector
   # Like Array#collect.
   #
   def collect(&block) # :yield: e
-    raise "NOT IMPLEMENTED" unless block_given?
-    # return to_enum(:collect) unless block_given?
+    return to_enum(:collect) unless block_given?
     els = {}
     @elements.each_pair do |k,v|
       els[k] = yield v
@@ -201,8 +196,7 @@ class SparseVector < Vector
   # Like SparseVector#collect2, but returns a SparseVector instead of an Array.
   #
   def map2(v, &block) # :yield: e1, e2
-    raise "NOT IMPLEMENTED" unless block_given?
-    # return to_enum(:map2, v) unless block_given?
+    return to_enum(:map2, v) unless block_given?
     els = collect2(v, &block)
     SparseVector.elements(els, false, size)
   end
@@ -211,8 +205,7 @@ class SparseVector < Vector
   # Like SparseVector#collect2, but returns a SparseVector instead of a Hash.
   #
   def map2_nz(v, &block) # :yield: e1, e2
-    raise "NOT IMPLEMENTED" unless block_given?
-    # return to_enum(:map2, v) unless block_given?
+    return to_enum(:map2_nz, v) unless block_given?
     els = collect2_nz(v, &block)
     SparseVector.elements(els, false)
   end
