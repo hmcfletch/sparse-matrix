@@ -1,11 +1,5 @@
 require File.expand_path( File.join( File.dirname( __FILE__ ), 'test_helper' ) )
 
-# add somce accessor so we can check under the hood
-class SparseMatrix
-  def row_elems; @rows end
-  def col_elems; @columns end
-end
-
 class TestSparseMatrix < Test::Unit::TestCase
 
   def test_creation_array
@@ -14,11 +8,11 @@ class TestSparseMatrix < Test::Unit::TestCase
     assert !sm.column_major?
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.row_elems)
-    assert_equal Hash.new(0), sm.row_elems.default
-    assert_equal 0, sm.row_elems[0].default
-    assert_equal 0, sm.row_elems[1].default
-    assert_equal 0, sm.row_elems[2].default
+    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.row_data)
+    assert_equal Hash.new(0), sm.row_data.default
+    assert_equal 0, sm.row_data[0].default
+    assert_equal 0, sm.row_data[1].default
+    assert_equal 0, sm.row_data[2].default
     assert_equal 5, sm.nnz
   end
 
@@ -26,11 +20,11 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.rows([[1,0,2],[3,0,0],[0,4,5]])
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.row_elems)
-    assert_equal Hash.new(0), sm.row_elems.default
-    assert_equal 0, sm.row_elems[0].default
-    assert_equal 0, sm.row_elems[1].default
-    assert_equal 0, sm.row_elems[2].default
+    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.row_data)
+    assert_equal Hash.new(0), sm.row_data.default
+    assert_equal 0, sm.row_data[0].default
+    assert_equal 0, sm.row_data[1].default
+    assert_equal 0, sm.row_data[2].default
     assert_equal 5, sm.nnz
   end
 
@@ -40,11 +34,11 @@ class TestSparseMatrix < Test::Unit::TestCase
     assert sm.column_major?
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.col_elems)
-    assert_equal Hash.new(0), sm.col_elems.default
-    assert_equal 0, sm.col_elems[0].default
-    assert_equal 0, sm.col_elems[1].default
-    assert_equal 0, sm.col_elems[2].default
+    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.column_data)
+    assert_equal Hash.new(0), sm.column_data.default
+    assert_equal 0, sm.column_data[0].default
+    assert_equal 0, sm.column_data[1].default
+    assert_equal 0, sm.column_data[2].default
     assert_equal 5, sm.nnz
   end
 
@@ -52,11 +46,11 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.rows({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } })
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.row_elems)
-    assert_equal Hash.new(0), sm.row_elems.default
-    assert_equal 0, sm.row_elems[0].default
-    assert_equal 0, sm.row_elems[1].default
-    assert_equal 0, sm.row_elems[2].default
+    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm.row_data)
+    assert_equal Hash.new(0), sm.row_data.default
+    assert_equal 0, sm.row_data[0].default
+    assert_equal 0, sm.row_data[1].default
+    assert_equal 0, sm.row_data[2].default
     assert_equal 5, sm.nnz
   end
 
@@ -64,11 +58,11 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.columns([[1,0],[3,0],[0,4]])
     assert_equal 2, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 1 }, 1 => { 0 => 3 }, 2 => { 1 => 4 } }, sm.col_elems)
-    assert_equal Hash.new(0), sm.col_elems.default
-    assert_equal 0, sm.col_elems[0].default
-    assert_equal 0, sm.col_elems[1].default
-    assert_equal 0, sm.col_elems[2].default
+    assert_equal({ 0 => { 0 => 1 }, 1 => { 0 => 3 }, 2 => { 1 => 4 } }, sm.column_data)
+    assert_equal Hash.new(0), sm.column_data.default
+    assert_equal 0, sm.column_data[0].default
+    assert_equal 0, sm.column_data[1].default
+    assert_equal 0, sm.column_data[2].default
     assert_equal 3, sm.nnz
   end
 
@@ -79,7 +73,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.diagonal(3,4,0,9,0)
     assert_equal 5, sm.row_size
     assert_equal 5, sm.column_size
-    assert_equal({ 0 => { 0 => 3 }, 1 => { 1 => 4 }, 3 => { 3 => 9 } }, sm.row_elems)
+    assert_equal({ 0 => { 0 => 3 }, 1 => { 1 => 4 }, 3 => { 3 => 9 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -87,7 +81,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.scalar(3,4)
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 4 }, 1 => { 1 => 4 }, 2 => { 2 => 4 } }, sm.row_elems)
+    assert_equal({ 0 => { 0 => 4 }, 1 => { 1 => 4 }, 2 => { 2 => 4 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -95,7 +89,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.identity(3)
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({ 0 => { 0 => 1 }, 1 => { 1 => 1 }, 2 => { 2 => 1 } }, sm.row_elems)
+    assert_equal({ 0 => { 0 => 1 }, 1 => { 1 => 1 }, 2 => { 2 => 1 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -103,7 +97,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.zero(3)
     assert_equal 3, sm.row_size
     assert_equal 3, sm.column_size
-    assert_equal({}, sm.row_elems)
+    assert_equal({}, sm.row_data)
     assert_equal 0, sm.nnz
   end
 
@@ -111,7 +105,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.row_vector([1,3,0,0,6])
     assert_equal 1, sm.row_size
     assert_equal 5, sm.column_size
-    assert_equal({ 0 => { 0 => 1, 1 => 3, 4 => 6 } }, sm.row_elems)
+    assert_equal({ 0 => { 0 => 1, 1 => 3, 4 => 6 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -119,7 +113,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.row_vector({ 0 => 1, 1 => 3, 4 => 6 })
     assert_equal 1, sm.row_size
     assert_equal 5, sm.column_size
-    assert_equal({ 0 => { 0 => 1, 1 => 3, 4 => 6 } }, sm.row_elems)
+    assert_equal({ 0 => { 0 => 1, 1 => 3, 4 => 6 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -127,7 +121,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.column_vector([1,3,0,0,6])
     assert_equal 5, sm.row_size
     assert_equal 1, sm.column_size
-    assert_equal({ 0 => { 0 => 1 }, 1 => { 0 => 3 }, 4 => { 0 => 6 } }, sm.row_elems)
+    assert_equal({ 0 => { 0 => 1 }, 1 => { 0 => 3 }, 4 => { 0 => 6 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -135,7 +129,7 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.column_vector({ 0 => 1, 1 => 3, 4 => 6 })
     assert_equal 5, sm.row_size
     assert_equal 1, sm.column_size
-    assert_equal( { 0 => { 0 => 1 }, 1 => { 0 => 3 }, 4 => { 0 => 6 } }, sm.row_elems)
+    assert_equal( { 0 => { 0 => 1 }, 1 => { 0 => 3 }, 4 => { 0 => 6 } }, sm.row_data)
     assert_equal 3, sm.nnz
   end
 
@@ -143,21 +137,21 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm1 = SparseMatrix.empty(3,0)
     assert_equal 3, sm1.row_size
     assert_equal 0, sm1.column_size
-    assert_equal({}, sm1.row_elems)
+    assert_equal({}, sm1.row_data)
     assert_equal 0, sm1.nnz
 
     sm2 = SparseMatrix.empty(0,4)
     assert_equal 0, sm2.row_size
     assert_equal 4, sm2.column_size
-    assert_equal({}, sm2.row_elems)
+    assert_equal({}, sm2.row_data)
     assert_equal 0, sm2.nnz
   end
 
   def test_to_column_major
     sm_r = SparseMatrix.rows([[1,0,2],[3,0,0],[0,4,5]])
     sm_c = SparseMatrix.columns([[1,3,0],[0,0,4],[2,0,5]])
-    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm_r.row_elems)
-    assert_equal({ 0 => { 0 => 1, 1 => 3 }, 1 => { 2 => 4 }, 2 => { 0 => 2, 2 => 5 } }, sm_c.col_elems)
+    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm_r.row_data)
+    assert_equal({ 0 => { 0 => 1, 1 => 3 }, 1 => { 2 => 4 }, 2 => { 0 => 2, 2 => 5 } }, sm_c.column_data)
 
     assert_equal sm_c, sm_r.to_column_major
   end
@@ -165,8 +159,8 @@ class TestSparseMatrix < Test::Unit::TestCase
   def test_to_row_major
     sm_r = SparseMatrix.rows([[1,0,2],[3,0,0],[0,4,5]])
     sm_c = SparseMatrix.columns([[1,3,0],[0,0,4],[2,0,5]])
-    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm_r.row_elems)
-    assert_equal({ 0 => { 0 => 1, 1 => 3 }, 1 => { 2 => 4 }, 2 => { 0 => 2, 2 => 5 } }, sm_c.col_elems)
+    assert_equal({ 0 => { 0 => 1, 2 => 2 }, 1 => { 0 => 3 }, 2 => { 1 => 4, 2 => 5 } }, sm_r.row_data)
+    assert_equal({ 0 => { 0 => 1, 1 => 3 }, 1 => { 2 => 4 }, 2 => { 0 => 2, 2 => 5 } }, sm_c.column_data)
     assert_equal sm_r, sm_c.to_row_major
   end
 
@@ -259,13 +253,13 @@ class TestSparseMatrix < Test::Unit::TestCase
     sm = SparseMatrix.columns([[1,3,0],[0,0,4],[3,9,0]])
     a = 0
     sm.column_nz(0) { |v| a += 1 }
-    assert_equal 2, a
+    assert_equal 3, a
     a = 0
     sm.column_nz(1) { |v| a += 1 if v != 0 }
     assert_equal 1, a
     a = 0
     sm.column_nz(-1) { |v| a += 1 if v == 0 }
-    assert_equal 0, a
+    assert_equal 1, a
   end
 
   def test_collect
