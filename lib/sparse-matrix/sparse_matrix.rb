@@ -258,10 +258,22 @@ class SparseMatrix < Matrix
 
   def to_row_major
     @rows = @columns.transpose if column_major?
+    @rows.default = Hash.new(0)
+    @rows.keys.each do |k|
+      @rows[k].default = 0
+    end
+    @columns = nil
+    self
   end
 
   def to_column_major
-    @rcolumns = @rows.transpose if row_major?
+    @columns = @rows.transpose if row_major?
+    @columns.default = Hash.new(0)
+    @columns.keys.each do |k|
+      @columns[k].default = 0
+    end
+    @rows = nil
+    self
   end
 
   def new_matrix(rows, row_size = nil, column_size = nil, row_major=true) # :nodoc:
@@ -277,11 +289,14 @@ class SparseMatrix < Matrix
     if row_major?
       @rows.fetch(i){ return 0 }[j]
     else
-      @columns.fetch(j){ return 0}[i]
+      @columns.fetch(j){ return 0 }[i]
     end
   end
   alias element []
   alias component []
+
+  def row_data; @rows end
+  def column_data; @columns end
 
   def []=(i, j, v)
     if row_major?
@@ -699,13 +714,21 @@ class SparseMatrix < Matrix
     when SparseMatrix
       SparseMatrix.Raise ErrDimensionMismatch if column_size != m.row_size
 
+      m.to_column_major
       c = {}
       row_size.times do |i|
         c[i] = {}
         m.column_size.times do |j|
           c_ij = 0
-          @rows[i].each_pair do |k,v|
-            c_ij += v * m[k,j]
+          # figure out which vector to iterate over
+          if row_data[i].size < m.column_data[i].size
+            @rows[i].each_pair do |k,v|
+              c_ij += v * m[k,j]
+            end
+          else
+            m.column_data[j].each_pair do |k,v|
+              c_ij += element(i,k) * v
+            end
           end
           c[i][j] = c_ij unless c_ij == 0
         end
@@ -725,7 +748,33 @@ class SparseMatrix < Matrix
   #        -4 12
   #
   def +(m)
-    raise "NOT IMPLEMENTED"
+    case m
+    when Numeric
+      Matrix.Raise ErrOperationNotDefined, "+", self.class, m.class
+    when Vector
+      m = Matrix.column_vector(m)
+    when Matrix
+    else
+      return apply_through_coercion(m, __method__)
+    end
+
+    Matrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
+
+    # rows = Array.new(row_size) {|i|
+    #   Array.new(column_size) {|j|
+    #     self[i, j] + m[i, j]
+    #   }
+    # }
+
+    rows = {}
+    (row_data.keys + m.row_data.keys).uniq.each do |i|
+      (row_data[i].keys + m.row_data[i].keys).uniq.each do |j|
+        rows[i] ||= {}
+        rows[i][j] = row_data[i][j] + m.row_data[i][j]
+      end
+    end
+
+    new_matrix rows, row_size, column_size
   end
 
   #
@@ -735,7 +784,27 @@ class SparseMatrix < Matrix
   #         8  1
   #
   def -(m)
-    raise "NOT IMPLEMENTED"
+    case m
+    when Numeric
+      Matrix.Raise ErrOperationNotDefined, "-", self.class, m.class
+    when Vector
+      m = Matrix.column_vector(m)
+    when Matrix
+    else
+      return apply_through_coercion(m, __method__)
+    end
+
+    Matrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
+
+    rows = {}
+    (row_data.keys + m.row_data.keys).uniq.each do |i|
+      (row_data[i].keys + m.row_data[i].keys).uniq.each do |j|
+        rows[i] ||= {}
+        rows[i][j] = row_data[i][j] - m.row_data[i][j]
+      end
+    end
+
+    new_matrix rows, row_size, column_size
   end
 
   #
