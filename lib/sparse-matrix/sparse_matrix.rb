@@ -714,6 +714,7 @@ class SparseMatrix < Matrix
     when SparseMatrix
       SparseMatrix.Raise ErrDimensionMismatch if column_size != m.row_size
 
+      to_row_major if column_major?
       m.to_column_major
       c = {}
       row_size.times do |i|
