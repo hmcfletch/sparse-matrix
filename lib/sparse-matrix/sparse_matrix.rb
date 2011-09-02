@@ -661,7 +661,13 @@ class SparseMatrix < Matrix
     return false unless SparseMatrix === other &&
                         column_size == other.column_size &&
                         row_size == other.row_size # necessary for empty matrices
-    rows == other.rows
+    if row_major? && other.row_major?
+      rows == other.rows
+    elsif column_major? && other.column_major?
+      columns == other.columns
+    else
+      return 
+    end
   end
 
   def eql?(other)
@@ -771,7 +777,8 @@ class SparseMatrix < Matrix
     (row_data.keys + m.row_data.keys).uniq.each do |i|
       (row_data[i].keys + m.row_data[i].keys).uniq.each do |j|
         rows[i] ||= {}
-        rows[i][j] = row_data[i][j] + m.row_data[i][j]
+        val = row_data[i][j] + m.row_data[i][j]
+        rows[i][j] = val unless val == 0
       end
     end
 
@@ -801,7 +808,8 @@ class SparseMatrix < Matrix
     (row_data.keys + m.row_data.keys).uniq.each do |i|
       (row_data[i].keys + m.row_data[i].keys).uniq.each do |j|
         rows[i] ||= {}
-        rows[i][j] = row_data[i][j] - m.row_data[i][j]
+        val = row_data[i][j] - m.row_data[i][j]
+        rows[i][j] = val unless val == 0
       end
     end
 
