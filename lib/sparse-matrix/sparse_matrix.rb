@@ -9,8 +9,8 @@ class SparseMatrix < Matrix
 
   # instance creations
   private_class_method :new
-  attr_reader :rows, :columns
-  protected :rows, :columns
+  attr_reader :rows
+  protected :rows
 
   #
   # Creates a sparse matrix where each argument is a row.
@@ -53,23 +53,8 @@ class SparseMatrix < Matrix
   #      =>  25 -1
   #          93 66
   #
-  def SparseMatrix.columns(columns, copy = true)
-    columns = convert_to_hash(columns, copy)
-    num_columns = columns.length
-    num_rows = 0
-
-    columns.each_pair do |k,v|
-      num_elems = v.length
-      columns[k] = convert_to_hash(v, copy)
-      num_columns = k + 1 if k + 1 > num_columns
-
-      tmp_num_row = [num_elems, columns[k].empty? ? 0 : columns[k].keys.max + 1].max
-      num_rows = tmp_num_row if tmp_num_row > num_rows
-      # remove the column if it is empty
-      columns.delete(k) if columns[k].empty?
-    end
-
-    new columns, num_rows, num_columns, false
+  def SparseMatrix.columns(columns)
+    SparseMatrix.rows(columns, false).transpose
   end
 
   #
@@ -203,36 +188,20 @@ class SparseMatrix < Matrix
   #
   # SparseMatrix.new is private; use SparseMatrix.rows, columns, [], etc... to create.
   #
-  def initialize(rows, num_rows=nil, num_columns=nil, row_major=true)
+  def initialize(rows, num_rows=nil, num_columns=nil)
     # No checking is done at this point. rows must be a Hash of Hashes.
     # column_size must be the maximum value of the key set, if there are any,
     # otherwise it *must* be specified and can be any integer >= 0
-    if row_major
-      @rows = rows
-    else
-      @columns = rows
-    end
+    @rows = rows
 
     # determine size if not given
     if num_rows.nil? || num_columns.nil?
       if rows.is_a?(Hash)
         num_rows = rows.keys.max + 1 if num_rows.nil?
         num_columns = rows.values.collect { |c| c.keys.max }.max + 1 if num_columns.nil?
-
-        if !row_major
-          tmp = num_rows
-          num_rows = num_columns
-          num_column = tmp
-        end
       elsif rows.is_a?(Array)
         num_rows = rows.size if num_rows.nil?
         num_columns = rows[0].size if num_columns.nil?
-
-        if !row_major
-          tmp = num_rows
-          num_rows = num_columns
-          num_column = tmp
-        end
       end
     end
 
@@ -240,44 +209,14 @@ class SparseMatrix < Matrix
     @column_size = num_columns
 
     # set defaults for the hashes
-    if row_major?
-      @rows.default = Hash.new(0)
-      @rows.keys.each do |k|
-        @rows[k].default = 0
-      end
-    else
-      @columns.default = Hash.new(0)
-      @columns.keys.each do |k|
-        @columns[k].default = 0
-      end
-    end
-  end
-
-  def row_major?; !rows.nil? end
-  def column_major?; !columns.nil? end
-
-  def to_row_major
-    @rows = @columns.transpose if column_major?
     @rows.default = Hash.new(0)
     @rows.keys.each do |k|
       @rows[k].default = 0
     end
-    @columns = nil
-    self
   end
 
-  def to_column_major
-    @columns = @rows.transpose if row_major?
-    @columns.default = Hash.new(0)
-    @columns.keys.each do |k|
-      @columns[k].default = 0
-    end
-    @rows = nil
-    self
-  end
-
-  def new_matrix(rows, row_size = nil, column_size = nil, row_major=true) # :nodoc:
-    SparseMatrix.send(:new, rows, row_size, column_size, row_major) # bypass privacy of Matrix.new
+  def new_matrix(rows, row_size = nil, column_size = nil) # :nodoc:
+    SparseMatrix.send(:new, rows, row_size, column_size) # bypass privacy of Matrix.new
   end
   private :new_matrix
 
@@ -286,24 +225,15 @@ class SparseMatrix < Matrix
   #
   def [](i, j)
     return nil if i >= row_size || j >= column_size
-    if row_major?
-      @rows.fetch(i){ return 0 }[j]
-    else
-      @columns.fetch(j){ return 0 }[i]
-    end
+    @rows.fetch(i){ return 0 }[j]
   end
   alias element []
   alias component []
 
   def row_data; @rows end
-  def column_data; @columns end
 
   def []=(i, j, v)
-    if row_major?
-      @rows[i][j] = v
-    else
-      @columns[j][i] = v
-    end
+    @rows[i][j] = v
   end
   alias set_element []=
   alias set_component []=
@@ -322,11 +252,7 @@ class SparseMatrix < Matrix
   def column_size=(val); @column_size = val end
 
   def nnz
-    if row_major?
-      @rows.values.inject(0) { |m,v| m + v.size }
-    else
-      @columns.values.inject(0) { |m,v| m + v.size }
-    end
+    @rows.values.inject(0) { |m,v| m + v.size }
   end
 
   #
@@ -348,13 +274,7 @@ class SparseMatrix < Matrix
   end
 
   def row?(i)
-    if row_major?
-      return !@rows[i].empty?
-    else
-      @columns.values.each do |col|
-        return true if col.has_key?(i)
-      end
-    end
+    return !@rows[i].empty?
   end
 
   def column(i, &block) # :yield: e
@@ -373,12 +293,8 @@ class SparseMatrix < Matrix
   end
 
   def column?(i)
-    if column_major?
-      return !@columns[i].empty?
-    else
-      @rows.values.each do |row|
-        return true if row.has_key?(i)
-      end
+    @rows.values.each do |row|
+      return true if row.has_key?(i)
     end
   end
 
@@ -412,21 +328,13 @@ class SparseMatrix < Matrix
     if block_given?
       return self if j >= column_size
       row_size.times do |i|
-        if row_major?
-          yield @rows[i][j]
-        else
-          yield @columns[j][i]
-        end
+        yield @rows[i][j]
       end
       self
     else
       return nil if j >= column_size
       col = Array.new(row_size) { |i|
-        if row_major?
-          @rows[i][j]
-        else
-          @columns[j][i]
-        end
+        @rows[i][j]
       }
       SparseVector.elements(col, false, row_size)
     end
@@ -442,22 +350,14 @@ class SparseMatrix < Matrix
     if block_given?
       return self if j >= column_size
       row_size.times do |i|
-        if row_major?
-          next unless @rows.has_key?(i) && @rows[i].has_key?(j)
-          yield @rows[i][j]
-        else
-          yield @columns[j][i]
-        end
+        next unless @rows.has_key?(i) && @rows[i].has_key?(j)
+        yield @rows[i][j]
       end
       self
     else
       return nil if j >= column_size
       col = Array.new(row_size) { |i|
-        if row_major?
-          @rows[i][j]
-        else
-          @columns[j][i]
-        end
+        @rows[i][j]
       }
       SparseVector.elements(col, false, row_size)
     end
@@ -661,13 +561,7 @@ class SparseMatrix < Matrix
     return false unless SparseMatrix === other &&
                         column_size == other.column_size &&
                         row_size == other.row_size # necessary for empty matrices
-    if row_major? && other.row_major?
-      rows == other.rows
-    elsif column_major? && other.column_major?
-      columns == other.columns
-    else
-      return 
-    end
+    rows == other.rows
   end
 
   def eql?(other)
@@ -720,22 +614,13 @@ class SparseMatrix < Matrix
     when SparseMatrix
       SparseMatrix.Raise ErrDimensionMismatch if column_size != m.row_size
 
-      to_row_major if column_major?
-      m.to_column_major
       c = {}
       row_size.times do |i|
         c[i] = {}
         m.column_size.times do |j|
           c_ij = 0
-          # figure out which vector to iterate over
-          if row_data[i].size < m.column_data[i].size
-            @rows[i].each_pair do |k,v|
-              c_ij += v * m[k,j]
-            end
-          else
-            m.column_data[j].each_pair do |k,v|
-              c_ij += element(i,k) * v
-            end
+          @rows[i].each_pair do |k,v|
+            c_ij += v * m[k,j]
           end
           c[i][j] = c_ij unless c_ij == 0
         end
@@ -991,8 +876,6 @@ class SparseMatrix < Matrix
   def inspect
     if empty?
       "SparseMatrix.empty(#{row_size}, #{column_size})"
-    elsif column_major?
-      "SparseMatrix#{@column.inspect}, [#{row_size},#{column_size}] - column major"
     else
       "SparseMatrix#{@rows.inspect}, [#{row_size},#{column_size}]"
     end
