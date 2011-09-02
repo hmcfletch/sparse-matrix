@@ -751,15 +751,15 @@ class SparseMatrix < Matrix
   def +(m)
     case m
     when Numeric
-      Matrix.Raise ErrOperationNotDefined, "+", self.class, m.class
+      SparseMatrix.Raise ErrOperationNotDefined, "+", self.class, m.class
     when Vector
-      m = Matrix.column_vector(m)
+      m = SparseMatrix.column_vector(m)
     when Matrix
     else
       return apply_through_coercion(m, __method__)
     end
 
-    Matrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
+    SparseMatrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
 
     # rows = Array.new(row_size) {|i|
     #   Array.new(column_size) {|j|
@@ -787,15 +787,15 @@ class SparseMatrix < Matrix
   def -(m)
     case m
     when Numeric
-      Matrix.Raise ErrOperationNotDefined, "-", self.class, m.class
+      SparseMatrix.Raise ErrOperationNotDefined, "-", self.class, m.class
     when Vector
-      m = Matrix.column_vector(m)
+      m = SparseMatrix.column_vector(m)
     when Matrix
     else
       return apply_through_coercion(m, __method__)
     end
 
-    Matrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
+    SparseMatrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
 
     rows = {}
     (row_data.keys + m.row_data.keys).uniq.each do |i|
