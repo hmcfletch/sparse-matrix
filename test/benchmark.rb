@@ -8,6 +8,7 @@ num_runs = 3
 
 sizes.each do |size|
   results[size] = {}
+  matrix_result = 0
   sparsities.each do |sparsity|
     results[size][sparsity] = {}
 
@@ -42,19 +43,23 @@ sizes.each do |size|
       a = s_a.to_m
       b = s_b.to_m
 
-      m_start = Time.now
-      c = a * b
-      m_end = Time.now
+      # the matrix result is same regardless of sparcity
+      if matrix_result == 0
+        m_start = Time.now
+        c = a * b
+        m_end = Time.now
+        matrix_time += (m_end - m_start)
+      end
 
       sm_start = Time.now
       s_c = s_a * s_b
       sm_end = Time.now
 
-      matrix_time += (m_end - m_start)
       sparse_matrix_time += (sm_end - sm_start)
     end
 
-    results[size][sparsity][:matrix] = matrix_time / num_runs
+    matrix_result = matrix_time / num_runs if matrix_result == 0
+    results[size][sparsity][:matrix] = matrix_result
     results[size][sparsity][:sparse_matrix] = sparse_matrix_time / num_runs
     m = results[size][sparsity][:matrix]
     sm = results[size][sparsity][:sparse_matrix]

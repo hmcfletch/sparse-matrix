@@ -139,7 +139,6 @@ class SparseVector < Vector
     raise TypeError, "Integer is not like SparseVector" if v.kind_of?(Integer)
     SparseVector.Raise ErrDimensionMismatch if size != v.size
     return to_enum(:each2_nz, v) unless block_given?
-
     (nz_indicies + v.nz_indicies).uniq.sort.each do |i|
       yield @elements[i], v[i]
     end

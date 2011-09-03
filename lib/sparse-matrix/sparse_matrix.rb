@@ -204,6 +204,7 @@ class SparseMatrix < Matrix
         num_columns = rows[0].size if num_columns.nil?
       end
     end
+
     @row_size = num_rows
     @column_size = num_columns
 
@@ -229,6 +230,8 @@ class SparseMatrix < Matrix
   alias element []
   alias component []
 
+  def row_data; @rows end
+
   def []=(i, j, v)
     @rows[i][j] = v
   end
@@ -239,19 +242,13 @@ class SparseMatrix < Matrix
   #
   # Returns the number of rows.
   #
-  def row_size
-    @row_size
-  end
-
+  def row_size; @row_size end
   def row_size=(val); @row_size = val end
 
   #
   # Returns the number of columns.
   #
-  def column_size
-    @column_size
-  end
-
+  def column_size; @column_size end
   def column_size=(val); @column_size = val end
 
   def nnz
@@ -277,7 +274,28 @@ class SparseMatrix < Matrix
   end
 
   def row?(i)
-    return @rows[i].empty?
+    return !@rows[i].empty?
+  end
+
+  def column(i, &block) # :yield: e
+    raise "NOT IMPLEMENTED"
+    return nil if i >= row_size
+    i = i < 0 ? row_size + i : i
+    if block_given?
+      @rows.fetch(i){ return self }
+      column_size.times do |j|
+        yield @rows[i][j]
+      end
+      self
+    else
+      SparseVector.elements(@rows.fetch(i){ Array.new(column_size,0) }, false, column_size)
+    end
+  end
+
+  def column?(i)
+    @rows.values.each do |row|
+      return true if row.has_key?(i)
+    end
   end
 
   private :row?
@@ -622,7 +640,34 @@ class SparseMatrix < Matrix
   #        -4 12
   #
   def +(m)
-    raise "NOT IMPLEMENTED"
+    case m
+    when Numeric
+      SparseMatrix.Raise ErrOperationNotDefined, "+", self.class, m.class
+    when Vector
+      m = SparseMatrix.column_vector(m)
+    when Matrix
+    else
+      return apply_through_coercion(m, __method__)
+    end
+
+    SparseMatrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
+
+    # rows = Array.new(row_size) {|i|
+    #   Array.new(column_size) {|j|
+    #     self[i, j] + m[i, j]
+    #   }
+    # }
+
+    rows = {}
+    (row_data.keys + m.row_data.keys).uniq.each do |i|
+      (row_data[i].keys + m.row_data[i].keys).uniq.each do |j|
+        rows[i] ||= {}
+        val = row_data[i][j] + m.row_data[i][j]
+        rows[i][j] = val unless val == 0
+      end
+    end
+
+    new_matrix rows, row_size, column_size
   end
 
   #
@@ -632,7 +677,28 @@ class SparseMatrix < Matrix
   #         8  1
   #
   def -(m)
-    raise "NOT IMPLEMENTED"
+    case m
+    when Numeric
+      SparseMatrix.Raise ErrOperationNotDefined, "-", self.class, m.class
+    when Vector
+      m = SparseMatrix.column_vector(m)
+    when Matrix
+    else
+      return apply_through_coercion(m, __method__)
+    end
+
+    SparseMatrix.Raise ErrDimensionMismatch unless row_size == m.row_size and column_size == m.column_size
+
+    rows = {}
+    (row_data.keys + m.row_data.keys).uniq.each do |i|
+      (row_data[i].keys + m.row_data[i].keys).uniq.each do |j|
+        rows[i] ||= {}
+        val = row_data[i][j] - m.row_data[i][j]
+        rows[i][j] = val unless val == 0
+      end
+    end
+
+    new_matrix rows, row_size, column_size
   end
 
   #
