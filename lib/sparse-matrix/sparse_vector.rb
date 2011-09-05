@@ -48,12 +48,17 @@ class SparseVector < Vector
   # Returns element number +i+ (starting at zero) of the vector.
   #
   def [](i)
-    i >= size ? nil : @elements[i]
+    i = i + size if i < 0
+    i >= size || i < 0 ? nil : @elements[i]
   end
   alias element []
   alias component []
 
   def []=(i, v)
+    # find the correct i
+    i = i + size if i < 0
+    return nil if i < 0
+
     # make sure we take care of 0 values correctly
     if v == 0 || v.nil?
       if @elements.has_key?(i)
@@ -123,6 +128,7 @@ class SparseVector < Vector
   #
   # FIXME: figure out what to do with no block
   def each2(v) # :yield: e1, e2
+    raise TypeError, "Integer is not like Vector" if v.kind_of?(Integer)
     SparseVector.Raise ErrDimensionMismatch if size != v.size
     return to_enum(:each2, v) unless block_given?
     size.times do |i|
@@ -252,11 +258,9 @@ class SparseVector < Vector
     when Numeric
       collect { |v| v * x }
     when SparseMatrix
-      raise "NOT IMPLEMENTED"
       SpraseMatrix.column_vector(self) * x
     when Matrix
-      raise "NOT IMPLEMENTED"
-      Matrix.column_vector(self) * x
+      Matrix.column_vector(self) * x.to_sm
     when SparseVector
       SparseVector.Raise ErrOperationNotDefined, "*", self.class, x.class
     when Vector
@@ -286,6 +290,8 @@ class SparseVector < Vector
       SparseVector.elements(els, false, size)
     when SparseMatrix
       SparseMatrix.column_vector(self) + v
+    when Matrix
+      SparseMatrix.column_vector(self) + v.to_sm
     else
       raise "NOT IMPLEMENTED"
       apply_through_coercion(v, __method__)
