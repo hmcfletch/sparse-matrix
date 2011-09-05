@@ -62,8 +62,8 @@ class TestSparseVector < Test::Unit::TestCase
     assert sv[-7].nil?
     assert sv[-10].nil?
 
-    assert sv.element(1) == sv[1]
-    assert sv.component(1) == sv[1]
+    assert_equal sv[1], sv.element(1)
+    assert_equal sv[1], sv.component(1)
   end
 
   # ENUMERATION
@@ -80,7 +80,7 @@ class TestSparseVector < Test::Unit::TestCase
       ret_array << k
     end
 
-    assert ret_array == [0,3,6,2,0,0]
+    assert_equal [0,3,6,2,0,0], ret_array
   end
 
   def test_each_nz
@@ -90,7 +90,7 @@ class TestSparseVector < Test::Unit::TestCase
       ret_array << k
     end
 
-    assert ret_array == [3,6,2]
+    assert_equal [3,6,2], ret_array
   end
 
   def test_each2
@@ -101,7 +101,7 @@ class TestSparseVector < Test::Unit::TestCase
       ret_array << [k,l]
     end
 
-    assert ret_array == [[0,1],[3,0],[0,0],[2,2],[0,6],[0,0]]
+    assert_equal [[0,1],[3,0],[0,0],[2,2],[0,6],[0,0]], ret_array
   end
 
   def test_each2_raise_type
@@ -133,7 +133,7 @@ class TestSparseVector < Test::Unit::TestCase
       ret_array << [k,l]
     end
 
-    assert ret_array == [[0,1],[3,0],[2,2],[0,6]]
+    assert_equal [[0,1],[3,0],[2,2],[0,6]], ret_array
   end
 
   def test_each2_nz_raise_type
@@ -164,7 +164,7 @@ class TestSparseVector < Test::Unit::TestCase
       k != 0 || l != 0
     end
 
-    assert ret_array == [true,true,false,true,true,false]
+    assert_equal [true,true,false,true,true,false], ret_array
   end
 
   def test_collect2_raise_type
@@ -193,14 +193,14 @@ class TestSparseVector < Test::Unit::TestCase
       k != 0 || l != 0
     end
 
-    assert ret_array == [true,true,nil,true,true,nil]
+    assert_equal [true,true,nil,true,true,nil], ret_array
   end
 
   def test_collect
     sv = SparseVector.elements([0,3,0,2,0,0])
     ret_sv = sv.collect { |v| v * 2 }
 
-    assert ret_sv == SparseVector.elements([0,6,0,4,0,0])
+    assert_equal SparseVector.elements([0,6,0,4,0,0]), ret_sv
   end
 
   def test_map2
@@ -210,7 +210,7 @@ class TestSparseVector < Test::Unit::TestCase
       (k * 2) + l + 3
     end
 
-    assert ret_sv == SparseVector[4,9,3,9,9,3]
+    assert_equal SparseVector[4,9,3,9,9,3], ret_sv
   end
 
   def test_map2_nz
@@ -220,7 +220,7 @@ class TestSparseVector < Test::Unit::TestCase
       (k * 2) + l + 3
     end
 
-    assert ret_sv == SparseVector[4,9,0,9,9,0]
+    assert_equal SparseVector[4,9,0,9,9,0], ret_sv
   end
 
   # COMPARING
@@ -242,14 +242,14 @@ class TestSparseVector < Test::Unit::TestCase
     sv1 = SparseVector.elements([0,3,0,2,0,0,3,0])
     sv2 = SparseVector.elements([1,0,0,2,6,0,5,0])
 
-    assert (sv1 + sv2) == SparseVector[1,3,0,4,6,0,8,0]
+    assert_equal SparseVector[1,3,0,4,6,0,8,0], (sv1 + sv2)
   end
 
   def test_addition_vector
     sv = SparseVector.elements([0,3,0,2,0,0,3,0])
     v  = Vector.elements([1,0,0,2,6,0,5,0])
 
-    assert (sv + v) == SparseVector[1,3,0,4,6,0,8,0]
+    assert_equal SparseVector[1,3,0,4,6,0,8,0], (sv + v)
   end
 
   def test_addition_sparse_matrix
@@ -264,14 +264,14 @@ class TestSparseVector < Test::Unit::TestCase
     sv1 = SparseVector.elements([0,3,0,2,0,0,3,0])
     sv2 = SparseVector.elements([1,0,0,2,6,0,5,0])
 
-    assert (sv1 - sv2) == SparseVector[-1,3,0,0,-6,0,-2,0]
+    assert_equal SparseVector[-1,3,0,0,-6,0,-2,0], (sv1 - sv2)
   end
 
   def test_subtraction_vector
     sv = SparseVector.elements([0,3,0,2,0,0,3,0])
     v  = Vector.elements([1,0,0,2,6,0,5,0])
 
-    assert (sv - v) == SparseVector[-1,3,0,0,-6,0,-2,0]
+    assert_equal SparseVector[-1,3,0,0,-6,0,-2,0], (sv - v)
   end
 
   def test_subtraction_sparse_matrix
@@ -285,7 +285,7 @@ class TestSparseVector < Test::Unit::TestCase
   def test_multiplication_numeric
     sv = SparseVector.elements([0,3,0,2,0,0,3,0])
 
-    assert (sv * 3) == SparseVector[0,9,0,6,0,0,9,0]
+    assert_equal SparseVector[0,9,0,6,0,0,9,0], (sv * 3)
   end
 
   def test_multiplication_sparse_matrix
@@ -305,7 +305,7 @@ class TestSparseVector < Test::Unit::TestCase
   def test_division_numeric
     sv = SparseVector.elements([0,8,0,2,0,0,6,0])
 
-    assert (sv / 2) == SparseVector[0,4,0,1,0,0,3,0]
+    assert_equal SparseVector[0,4,0,1,0,0,3,0], (sv / 2)
   end
 
   def test_division_sparse_matrix
@@ -320,13 +320,13 @@ class TestSparseVector < Test::Unit::TestCase
     sv1 = SparseVector.elements([0,3,0,2,0,0,3,0])
     sv2 = SparseVector.elements([1,0,0,2,6,0,5,0])
 
-    assert sv1.inner_product(sv2) == 19
+    assert_equal 19, sv1.inner_product(sv2)
   end
 
   def test_r
     sv = SparseVector.elements([0,3,0,2,0,0,3,0])
 
-    assert sv.r == Math.sqrt(22)
+    assert_equal Math.sqrt(22), sv.r
   end
 
   # CONVERTING
@@ -337,13 +337,13 @@ class TestSparseVector < Test::Unit::TestCase
   def test_to_a
     sv = SparseVector.elements([0,3,0,2,0,0,3,0])
 
-    assert sv.to_a == [0,3,0,2,0,0,3,0]
+    assert_equal [0,3,0,2,0,0,3,0], sv.to_a
   end
 
   def test_to_v
     sv = SparseVector.elements([0,3,0,2,0,0,3,0])
 
-    assert sv.to_v == Vector[0,3,0,2,0,0,3,0]
+    assert_equal Vector[0,3,0,2,0,0,3,0], sv.to_v
   end
 
   def test_elements_to_f
