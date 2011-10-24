@@ -9,8 +9,13 @@ class SparseMatrix < Matrix
 
   # instance creations
   private_class_method :new
-  attr_reader :rows
-  protected :rows
+
+  attr_reader :row_pointers
+  attr_reader :column_indexes
+  attr_reader :values
+  protected :row_pointers
+  protected :column_indexes
+  protected :values
 
   #
   # Creates a sparse matrix where each argument is a row.
@@ -188,31 +193,53 @@ class SparseMatrix < Matrix
   #
   # SparseMatrix.new is private; use SparseMatrix.rows, columns, [], etc... to create.
   #
-  def initialize(rows, num_rows=nil, num_columns=nil)
-    # No checking is done at this point. rows must be a Hash of Hashes.
-    # column_size must be the maximum value of the key set, if there are any,
-    # otherwise it *must* be specified and can be any integer >= 0
-    @rows = rows
+  def initialize(rows, num_rows_arg=nil, num_columns_arg=nil)
+    # # No checking is done at this point. rows must be a Hash of Hashes.
+    # # column_size must be the maximum value of the key set, if there are any,
+    # # otherwise it *must* be specified and can be any integer >= 0
+    # @rows = rows
 
-    # determine size if not given
-    if num_rows.nil? || num_columns.nil?
-      if rows.is_a?(Hash)
-        num_rows = rows.keys.max + 1 if num_rows.nil?
-        num_columns = rows.values.collect { |c| c.keys.max }.max + 1 if num_columns.nil?
-      elsif rows.is_a?(Array)
-        num_rows = rows.size if num_rows.nil?
-        num_columns = rows[0].size if num_columns.nil?
+    # # determine size if not given
+    # if num_rows.nil? || num_columns.nil?
+    #   if rows.is_a?(Hash)
+    #     num_rows = rows.keys.max + 1 if num_rows.nil?
+    #     num_columns = rows.values.collect { |c| c.keys.max }.max + 1 if num_columns.nil?
+    #   elsif rows.is_a?(Array)
+    #     num_rows = rows.size if num_rows.nil?
+    #     num_columns = rows[0].size if num_columns.nil?
+    #   end
+    # end
+
+    # @row_size = num_rows
+    # @column_size = num_columns
+
+    # # set defaults for the hashes
+    # @rows.default = Hash.new(0)
+    # @rows.keys.each do |k|
+    #   @rows[k].default = 0
+    # end
+
+    num_rows = num_rows_arg.nil? ? rows.keys.length : num_rows_arg
+    num_columns = num_columns_arg.nil? ? 0 : num_columns_arg
+    row_pointers = []
+    column_indexes = []
+    values = []
+    ci_j = 0
+    rows.keys.sort.each do |i|
+      row_pointers[i] = ci_j
+      rows[i].keys.sort.each do |j|
+        column_indexes.push(j)
+        values.push(rows[i][j])
+        num_columns = j if num_columns_arg && num_columns < j
       end
+      ci_j += rows[i].length
     end
 
+    @row_pointers = row_pointers
+    @column_indexes = column_indexes
+    @values = values
     @row_size = num_rows
     @column_size = num_columns
-
-    # set defaults for the hashes
-    @rows.default = Hash.new(0)
-    @rows.keys.each do |k|
-      @rows[k].default = 0
-    end
   end
 
   def new_matrix(rows, row_size = nil, column_size = nil) # :nodoc:
@@ -225,7 +252,20 @@ class SparseMatrix < Matrix
   #
   def [](i, j)
     return nil if i >= row_size || j >= column_size
-    @rows.fetch(i){ return 0 }[j]
+    if row_pointers[i].nil?
+      return 0
+    else
+      cp1 = row_pointers[i]
+      cp2 = row_pointers[i+1].nil? ? column_indexes.length : row_pointers[i+1]
+
+      k = cp1
+      while k < cp2
+        return values[k] if column_indexes[k] == j
+        return 0 if  column_indexes[k] > j
+        k += 1
+      end
+      return 0
+    end
   end
   alias element []
   alias component []
@@ -877,7 +917,10 @@ class SparseMatrix < Matrix
     if empty?
       "SparseMatrix.empty(#{row_size}, #{column_size})"
     else
-      "SparseMatrix#{@rows.inspect}, [#{row_size},#{column_size}]"
+      "SparseMatrix[#{row_size},#{column_size}]\n" +
+      "row_pointers : #{row_pointers.inspect}\n" +
+      "column_indexes : #{column_indexes.inspect}\n" +
+      "values : #{values.inspect}"
     end
   end
 
