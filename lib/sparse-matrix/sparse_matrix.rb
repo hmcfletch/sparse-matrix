@@ -255,11 +255,11 @@ class SparseMatrix < Matrix
     if row_pointers[i].nil?
       return 0
     else
-      cp1 = row_pointers[i]
-      cp2 = row_pointers[i+1].nil? ? column_indexes.length : row_pointers[i+1]
+      rp1 = row_pointers[i]
+      rp2 = row_pointers[i+1].nil? ? column_indexes.length : row_pointers[i+1]
 
-      k = cp1
-      while k < cp2
+      k = rp1
+      while k < rp2
         return values[k] if column_indexes[k] == j
         return 0 if  column_indexes[k] > j
         k += 1
@@ -273,11 +273,58 @@ class SparseMatrix < Matrix
   def row_data; @rows end
 
   def []=(i, j, v)
-    @rows[i][j] = v
+    rp1 = row_pointers[i]
+    rp2 = row_pointers[i+1].nil? ? column_indexes.length : row_pointers[i+1]
+    increment_row_pointers = false
+    index_to_insert_at = nil
+
+    if rp1.nil?
+      k = i
+      while k < row_pointers.length
+        unless row_pointers[k].nil?
+          increment_row_pointers = true
+          index_to_insert_at = row_pointers[k]
+          row_pointers[i] = row_pointers[k]
+          break
+        end
+        k += 1
+      end
+      if index_to_insert_at.nil?
+        index_to_insert_at = column_indexes.length
+        row_pointers[i] = column_indexes.length
+      end
+    else
+      # find the place in column_indexes to insert the new value
+      k = rp1
+      while k < rp2
+        if column_indexes[k] == j
+          values[k] = v
+          break
+        elsif column_indexes[k] < j
+          k += 1
+        elsif column_indexes[k] > j
+          index_to_insert_at = k
+          increment_row_pointers = true
+          break
+        end
+      end
+      index_to_insert_at = rp2 if index_to_insert_at.nil?
+    end
+
+    unless index_to_insert_at.nil?
+      column_indexes.insert(index_to_insert_at,j)
+      values.insert(index_to_insert_at,v)
+    end
+
+    if increment_row_pointers
+      for m in (i+1)..(row_pointers.length-1)
+        row_pointers[m] += 1 unless row_pointers[m].nil?
+      end
+    end
   end
-  alias set_element []=
+  # alias set_element []=
   alias set_component []=
-  private :[]=, :set_element, :set_component
+  # private :[]=, :set_element, :set_component
 
   #
   # Returns the number of rows.
